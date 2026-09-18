@@ -37,6 +37,7 @@
   const currency = () => state.config.currency || "BHD";
   const decimals = () => (currency() === "BHD" ? 3 : 2);
   const money = (n) => Number(n || 0).toFixed(decimals());
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   // Resolve a product's full list of option groups: its own custom groups (e.g. Size),
   // plus one combined Material+Color group built from the global library. Each library
@@ -92,6 +93,7 @@
   function productMinPrice(p) {
     let min = Number(p.price) || 0;
     getOptions(p).forEach(g => {
+      if (g.type === "text") { if (g.required) min += Number(g.priceDelta) || 0; return; }
       const deltas = (g.values || []).map(v => Number(v.priceDelta) || 0);
       if (deltas.length) min += Math.min(...deltas);
     });
@@ -169,6 +171,20 @@
     optWrap.innerHTML = state.currentOptions.map((g, gi) => {
       const isColor = g.type === "color";
       const isColorMat = g.type === "colormat";
+      if (g.type === "text") {
+        const sel = state.selection[gi];
+        const cur = sel ? sel.value : "";
+        const fee = Number(g.priceDelta) || 0;
+        const feeTxt = fee ? ` <span class="delta">+${money(fee)}</span>` : "";
+        const reqMark = g.required ? `<span class="req">*</span>` : `<span class="opt-tag">(${t("optional")})</span>`;
+        const maxAttr = g.maxLen ? `maxlength="${g.maxLen}"` : "";
+        const counter = g.maxLen ? `<small class="pd-text-help"><span data-count="${gi}">${cur.length}</span>/${g.maxLen}</small>` : "";
+        return `<div class="opt-group">
+          <div class="opt-label"><span>${L(g, "name")}${feeTxt}</span>${reqMark}</div>
+          <input type="text" class="pd-text-input" data-gtext="${gi}" ${maxAttr} placeholder="${esc(L(g, "placeholder"))}" value="${esc(cur)}">
+          ${counter}
+        </div>`;
+      }
       const values = (g.values || []).map((v, vi) => {
         const delta = Number(v.priceDelta) || 0;
         const deltaTxt = delta ? `<span class="delta">+${money(delta)}</span>` : "";
@@ -199,9 +215,34 @@
         updatePdPrice();
       });
     });
+    // custom text inputs
+    $$("[data-gtext]", optWrap).forEach(inp => {
+      const gi = +inp.dataset.gtext;
+      inp.addEventListener("input", () => {
+        const g = state.currentOptions[gi];
+        const txt = inp.value.trim();
+        const cnt = optWrap.querySelector(`[data-count="${gi}"]`);
+        if (cnt) cnt.textContent = inp.value.length;
+        if (txt) {
+          state.selection[gi] = {
+            value: txt,
+            label_en: `${g.name_en || "Text"}: ${txt}`,
+            label_ar: `${g.name_ar || g.name_en || "Text"}: ${txt}`,
+            priceDelta: Number(g.priceDelta) || 0,
+            __text: true
+          };
+        } else {
+          delete state.selection[gi];
+        }
+        updatePdPrice();
+      });
+    });
+
     // reflect defaults
     Object.keys(state.selection).forEach(gi => {
-      const vi = state.currentOptions[gi].values.indexOf(state.selection[gi]);
+      const g = state.currentOptions[gi];
+      if (!g || !Array.isArray(g.values)) return;
+      const vi = g.values.indexOf(state.selection[gi]);
       const b = optWrap.querySelector(`[data-g="${gi}"][data-v="${vi}"]`);
       if (b) b.classList.add("active");
     });
@@ -249,22 +290,27 @@
   function addCurrentToCart() {
     const p = state.current;
     const groups = state.currentOptions;
-    if (Object.keys(state.selection).length < groups.length) {
+    // a group needs a selection unless it's an optional text field
+    const missing = groups.filter((g, gi) => !state.selection[gi] && !(g.type === "text" && !g.required));
+    if (missing.length) {
       toast(t("select_required"));
-      // highlight missing
       groups.forEach((g, gi) => {
-        if (!state.selection[gi]) {
+        if (!state.selection[gi] && !(g.type === "text" && !g.required)) {
           const lbl = $$(".opt-label", $("#pdOptions"))[gi];
           if (lbl) { lbl.animate([{ color: "var(--danger)" }, { color: "" }], { duration: 900 }); }
         }
       });
       return;
     }
-    const opts = groups.map((g, gi) => ({
-      name_en: g.name_en, name_ar: g.name_ar,
-      value: state.selection[gi].value,
-      label_en: state.selection[gi].label_en, label_ar: state.selection[gi].label_ar
-    }));
+    const opts = groups.map((g, gi) => {
+      const sel = state.selection[gi];
+      if (!sel) return null; // optional text left blank
+      return {
+        name_en: g.name_en, name_ar: g.name_ar,
+        value: sel.value,
+        label_en: sel.label_en, label_ar: sel.label_ar
+      };
+    }).filter(Boolean);
     const key = p.id + "|" + opts.map(o => o.value).join("|");
     const existing = state.cart.find(l => l.key === key);
     if (existing) { existing.qty += state.qty; }
@@ -578,7 +624,13 @@
     on("#drawerScrim", "click", closeDrawer);
     on("#checkoutBtn", "click", openCheckout);
     $$(".modal-close").forEach(b => b.addEventListener("click", () => closeOverlay("#" + b.closest(".overlay").id)));
-    $$(".overlay").forEach(o => o.addEventListener("click", e => { if (e.target === o) closeOverlay("#" + o.id); }));
+    // Close only on a genuine backdrop click (mouse pressed AND released on the backdrop), so a
+    // text-selection drag that ends on the backdrop doesn't close the modal and lose typed input.
+    $$(".overlay").forEach(o => {
+      let downOnScrim = false;
+      o.addEventListener("mousedown", e => { downOnScrim = e.target === o; });
+      o.addEventListener("click", e => { if (e.target === o && downOnScrim) closeOverlay("#" + o.id); });
+    });
     document.addEventListener("keydown", e => {
       if (e.key === "Escape") { $$(".overlay.open").forEach(o => closeOverlay("#" + o.id)); closeDrawer(); }
     });

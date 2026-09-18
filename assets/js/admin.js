@@ -15,6 +15,8 @@
   let data = { config: {}, products: [] };
   let editIndex = null;   // index being edited (null = new)
   let edit = null;        // working copy of the product
+  let rcModel = { items: [] };   // working copy of the receipt being built
+  let rcUrl = null;              // object URL of the last generated PNG (revoked on regen)
 
   const CFG_FIELDS = [
     "brand", "whatsapp", "currency",
@@ -314,6 +316,9 @@
   function blankValue(type) {
     return { label_en: "", label_ar: "", value: "", priceDelta: 0, swatch: type === "color" ? "#d81f2a" : undefined };
   }
+  function blankTextGroup() {
+    return { name_en: "", name_ar: "", type: "text", required: true, maxLen: 30, priceDelta: 0, placeholder_en: "", placeholder_ar: "" };
+  }
 
   function openEditor(index) {
     editIndex = index;
@@ -377,6 +382,7 @@
         <div id="optWrap"></div>
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
           <button class="btn btn-ghost mini" id="addSelect">＋ Add option group</button>
+          <button class="btn btn-ghost mini" id="addText">＋ Add custom text field</button>
         </div>
       </div>`;
 
@@ -393,6 +399,7 @@
     $("#imgFile").addEventListener("change", handleImage);
     $("#addColorPart").addEventListener("click", () => { edit.colorParts.push({ name_en: "", name_ar: "", colors: [] }); renderColorParts(); });
     $("#addSelect").addEventListener("click", () => { serializeOptions(); edit.options.push(blankGroup("select")); renderOptions(); });
+    $("#addText").addEventListener("click", () => { serializeOptions(); edit.options.push(blankTextGroup()); renderOptions(); });
   }
 
   // Render one editable "color part" block per entry in edit.colorParts
@@ -518,6 +525,25 @@
   function renderOptions() {
     const wrap = $("#optWrap");
     wrap.innerHTML = edit.options.map((g, gi) => {
+      if (g.type === "text") {
+        return `<div class="opt-block">
+          <div class="opt-head">
+            <input class="mini" style="flex:1" placeholder="Field name EN (e.g. Text to print)" data-gi="${gi}" data-gf="name_en" value="${escapeHtml(g.name_en || "")}">
+            <input class="mini" style="flex:1" placeholder="اسم الحقل" dir="rtl" data-gi="${gi}" data-gf="name_ar" value="${escapeHtml(g.name_ar || "")}">
+            <button class="icon-btn" data-delg="${gi}" title="Remove field">🗑</button>
+          </div>
+          <div class="txt-opt-row">
+            <label class="txt-chk"><input type="checkbox" data-gi="${gi}" data-gf="required" ${g.required ? "checked" : ""}> Required</label>
+            <label class="mini-lbl">Max characters <input class="mini" type="number" min="0" step="1" style="width:80px" data-gi="${gi}" data-gf="maxLen" value="${g.maxLen || 0}"></label>
+            <label class="mini-lbl">Add-on price (${cur()}) <input class="mini" type="number" min="0" step="0.001" style="width:90px" data-gi="${gi}" data-gf="priceDelta" value="${g.priceDelta || 0}"></label>
+          </div>
+          <div class="row2" style="margin-top:8px">
+            <input class="mini" placeholder="Hint shown to customer EN (e.g. Name to print)" data-gi="${gi}" data-gf="placeholder_en" value="${escapeHtml(g.placeholder_en || "")}">
+            <input class="mini" placeholder="التلميح للعميل" dir="rtl" data-gi="${gi}" data-gf="placeholder_ar" value="${escapeHtml(g.placeholder_ar || "")}">
+          </div>
+          <small class="help">The customer types their own text (e.g. what to print). It's added to the WhatsApp order. Add-on price applies when the field is filled.</small>
+        </div>`;
+      }
       const values = g.values.map((v, vi) => `
         <div class="val-row no-swatch">
           <input placeholder="Label EN" data-gi="${gi}" data-vi="${vi}" data-vf="label_en" value="${escapeHtml(v.label_en || "")}">
@@ -558,7 +584,15 @@
   // Read all option inputs from the DOM back into edit.options (preserves typing before a re-render)
   function serializeOptions() {
     const wrap = $("#optWrap"); if (!wrap) return;
-    $$("[data-gf]", wrap).forEach(el => { edit.options[+el.dataset.gi][el.dataset.gf] = el.value; });
+    $$("[data-gf]", wrap).forEach(el => {
+      const f = el.dataset.gf;
+      let val;
+      if (el.type === "checkbox") val = el.checked;
+      else if (f === "priceDelta") val = parseFloat(el.value) || 0;
+      else if (f === "maxLen") val = parseInt(el.value, 10) || 0;
+      else val = el.value;
+      edit.options[+el.dataset.gi][f] = val;
+    });
     $$("[data-vf]", wrap).forEach(el => {
       const g = +el.dataset.gi, v = +el.dataset.vi, f = el.dataset.vf;
       const target = edit.options[g].values[v];
@@ -570,11 +604,14 @@
     serializeOptions();
     if (!edit.name_en.trim()) { toast("Please enter an English name"); return; }
     // derive "value" (the English label sent on WhatsApp) for each choice
-    edit.options.forEach(g => g.values.forEach(v => { v.value = (v.label_en || v.value || "").trim(); }));
-    // drop empty groups / empty choices
+    edit.options.forEach(g => {
+      if (g.type === "text") return;
+      g.values.forEach(v => { v.value = (v.label_en || v.value || "").trim(); });
+    });
+    // drop empty groups / empty choices (a text field is kept if it has a name)
     edit.options = edit.options
-      .map(g => ({ ...g, values: g.values.filter(v => v.label_en || v.label_ar) }))
-      .filter(g => g.values.length);
+      .map(g => g.type === "text" ? g : { ...g, values: g.values.filter(v => v.label_en || v.label_ar) })
+      .filter(g => g.type === "text" ? (g.name_en || g.name_ar || "").trim() : g.values.length);
     // keep only color parts that actually have colors ticked
     edit.colorParts = (edit.colorParts || []).filter(part => (part.colors || []).length);
     delete edit.colors;    // legacy single color list replaced by colorParts
@@ -617,6 +654,295 @@
     reader.readAsText(file);
   }
 
+  /* ---------------- receipts ---------------- */
+  const blankRcItem = () => ({ desc: "", qty: 1, line: 0 });
+  const todayISO = () => { const d = new Date(); const p = x => String(x).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
+  function prettyDate(iso) {
+    if (!iso) return "";
+    const [y, m, d] = iso.split("-").map(Number);
+    if (!y || !m || !d) return iso;
+    const mon = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1] || "";
+    return `${d} ${mon} ${y}`;
+  }
+
+  // Parse the WhatsApp order text produced by store.js buildMessage(). Tolerant: unknown lines are ignored.
+  function parseOrderText(text) {
+    const model = { orderNo: "", name: "", phone: "", area: "", notes: "", items: [], discLabel: "", discAmount: 0, total: 0 };
+    const lines = String(text || "").split(/\r?\n/);
+    let cur = null;
+    lines.forEach(raw => {
+      const line = raw.replace(/\s+$/, "");
+      let m;
+      if (m = line.match(/^\s*Order\s*#:\s*(.+)$/i)) { model.orderNo = m[1].trim(); return; }
+      if (m = line.match(/^\s*(\d+)\)\s+(.+?)\s+x(\d+)\s*$/)) { cur = { desc: m[2].trim(), qty: parseInt(m[3], 10) || 1, line: 0, opts: [] }; model.items.push(cur); return; }
+      if (cur && (m = line.match(/^\s*Line:\s*([\d.]+)/i))) { cur.line = parseFloat(m[1]) || 0; return; }
+      if (cur && (m = line.match(/^\s*-\s+(.+?):\s+(.+?)\s*$/))) { cur.opts.push(`${m[1].trim()}: ${m[2].trim()}`); return; }
+      if (m = line.match(/^\s*Discount code:\s*(.+?)\s+-([\d.]+)/i)) { model.discLabel = m[1].trim(); model.discAmount = parseFloat(m[2]) || 0; return; }
+      if (m = line.match(/^\s*Total:\s*([\d.]+)/i)) { model.total = parseFloat(m[1]) || 0; return; }
+      if (m = line.match(/^\s*Customer:\s*(.+)$/i)) { model.name = m[1].trim(); return; }
+      if (m = line.match(/^\s*Phone:\s*(.+)$/i)) { model.phone = m[1].trim(); return; }
+      if (m = line.match(/^\s*Area:\s*(.+)$/i)) { model.area = m[1].trim(); return; }
+      if (m = line.match(/^\s*Notes:\s*(.+)$/i)) { model.notes = m[1].trim(); return; }
+    });
+    // fold options into each item's description
+    model.items.forEach(it => { if (it.opts && it.opts.length) it.desc += ` (${it.opts.join(", ")})`; delete it.opts; });
+    return model;
+  }
+
+  function fillReceiptForm(model) {
+    $("#rc_name").value = model.name || "";
+    $("#rc_phone").value = model.phone || "";
+    $("#rc_area").value = model.area || "";
+    $("#rc_note").value = model.notes || "";
+    $("#rc_no").value = model.orderNo || "";
+    $("#rc_date").value = todayISO();
+    $("#rc_discLabel").value = model.discLabel || "";
+    $("#rc_discAmount").value = model.discAmount || 0;
+    $("#rcCur").textContent = cur();
+    rcModel.items = (model.items && model.items.length) ? model.items.map(it => ({ desc: it.desc || "", qty: it.qty || 1, line: it.line || 0 })) : [blankRcItem()];
+    renderRcItems();
+    if (model.total) $("#rc_total").value = money(model.total); else recomputeTotal();
+    $("#rcForm").classList.remove("hidden");
+  }
+
+  function renderRcItems() {
+    const wrap = $("#rcItems");
+    wrap.innerHTML = rcModel.items.map((it, i) => `
+      <div class="val-row" data-ri="${i}">
+        <input placeholder="Item (e.g. Custom Name Plate — Size: Medium)" data-rf="desc" value="${escapeHtml(it.desc || "")}">
+        <input type="number" min="1" step="1" placeholder="Qty" data-rf="qty" value="${it.qty || 1}">
+        <input type="number" min="0" step="0.001" placeholder="Amount" data-rf="line" value="${it.line || 0}">
+        <button class="icon-btn" data-rdel="${i}" title="Remove item">×</button>
+      </div>`).join("") || `<p class="hint" style="margin:0">No items — click “Add item”.</p>`;
+
+    $$("[data-rf]", wrap).forEach(el => el.addEventListener("input", () => {
+      const it = rcModel.items[+el.closest("[data-ri]").dataset.ri];
+      const f = el.dataset.rf;
+      it[f] = f === "desc" ? el.value : (f === "qty" ? (parseInt(el.value, 10) || 1) : (parseFloat(el.value) || 0));
+      if (f !== "desc") recomputeTotal();
+    }));
+    $$("[data-rdel]", wrap).forEach(b => b.addEventListener("click", () => {
+      rcModel.items.splice(+b.dataset.rdel, 1);
+      if (!rcModel.items.length) rcModel.items.push(blankRcItem());
+      renderRcItems(); recomputeTotal();
+    }));
+  }
+
+  function recomputeTotal() {
+    const subtotal = rcModel.items.reduce((s, it) => s + (Number(it.line) || 0), 0);
+    const disc = parseFloat($("#rc_discAmount").value) || 0;
+    $("#rc_total").value = money(Math.max(0, subtotal - disc));
+  }
+
+  function loadImg(src) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  }
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function wrapText(ctx, text, maxWidth) {
+    const words = String(text || "").split(/\s+/).filter(Boolean);
+    if (!words.length) return [""];
+    const out = [];
+    let cur = words[0];
+    for (let i = 1; i < words.length; i++) {
+      const test = cur + " " + words[i];
+      if (ctx.measureText(test).width > maxWidth) { out.push(cur); cur = words[i]; }
+      else cur = test;
+    }
+    out.push(cur);
+    return out;
+  }
+
+  async function drawReceipt(r) {
+    try { await document.fonts.ready; } catch { /* fall back to system font */ }
+    const scale = 2, W = 720, pad = 40, cw = W - pad * 2;
+    const FONT = (w, s) => `${w} ${s}px "Cairo", system-ui, -apple-system, sans-serif`;
+    const ACCENT = "#d81f2a", TEXT = "#0b0f19", MUTED = "#6b7280", GREEN = "#059669", LINE = "#e5e7eb";
+    const qtyX = pad + cw - 150;   // qty column centre
+    const descW = cw - 200;        // width available for item description
+
+    // measure item wrapping
+    const mc = document.createElement("canvas").getContext("2d");
+    mc.font = FONT(400, 15);
+    const items = r.items.map(it => ({ ...it, wl: wrapText(mc, it.desc, descW) }));
+
+    // compute total height
+    const hasDisc = (Number(r.discAmount) || 0) > 0;
+    const cust = [r.name && `Customer: ${r.name}`, r.phone && `Phone: ${r.phone}`, r.area && `Area: ${r.area}`, r.note && `Note: ${r.note}`].filter(Boolean);
+    let H = pad + 56 + 24 + 22 + 22;
+    items.forEach(it => { H += Math.max(1, it.wl.length) * 20 + 8; });
+    H += 16 + 22 + (hasDisc ? 22 : 0) + 40 + 28;
+    H += (cust.length ? cust.length * 20 + 14 : 0);
+    H += 42 + pad;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = W * scale; canvas.height = Math.ceil(H) * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
+    ctx.textBaseline = "alphabetic";
+
+    let y = pad;
+    // logo
+    const logo = await loadImg("assets/img/logo.jpg");
+    if (logo) {
+      ctx.save(); roundRect(ctx, pad, y, 48, 48, 10); ctx.clip();
+      ctx.drawImage(logo, pad, y, 48, 48); ctx.restore();
+    }
+    const bx = pad + (logo ? 60 : 0);
+    ctx.textAlign = "left"; ctx.fillStyle = TEXT; ctx.font = FONT(800, 22);
+    ctx.fillText(r.brand || "Bahrain3D", bx, y + 21);
+    ctx.fillStyle = MUTED; ctx.font = FONT(600, 13);
+    if (r.whatsapp) ctx.fillText("WhatsApp: " + r.whatsapp, bx, y + 41);
+
+    // PAID badge
+    const bw = 96, bh = 34, bxr = W - pad - bw, byr = y + 4;
+    ctx.fillStyle = GREEN; roundRect(ctx, bxr, byr, bw, bh, 8); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.font = FONT(800, 18); ctx.textAlign = "center";
+    ctx.fillText("PAID", bxr + bw / 2, byr + 23);
+
+    y += 56;
+    // receipt title + no/date
+    ctx.textAlign = "left"; ctx.fillStyle = ACCENT; ctx.font = FONT(700, 14);
+    ctx.fillText("RECEIPT", pad, y);
+    ctx.textAlign = "right"; ctx.fillStyle = MUTED; ctx.font = FONT(600, 13);
+    ctx.fillText([r.orderNo, prettyDate(r.date)].filter(Boolean).join("   ·   "), W - pad, y);
+    y += 24;
+    hline(ctx, pad, W - pad, y, LINE); y += 22;
+
+    // column headers
+    ctx.fillStyle = MUTED; ctx.font = FONT(700, 11);
+    ctx.textAlign = "left"; ctx.fillText("ITEM", pad, y);
+    ctx.textAlign = "center"; ctx.fillText("QTY", qtyX, y);
+    ctx.textAlign = "right"; ctx.fillText("AMOUNT", W - pad, y);
+    y += 22;
+
+    // items
+    items.forEach(it => {
+      const rows = Math.max(1, it.wl.length);
+      ctx.fillStyle = TEXT; ctx.font = FONT(400, 15); ctx.textAlign = "left";
+      it.wl.forEach((ln, i) => ctx.fillText(ln, pad, y + i * 20));
+      ctx.textAlign = "center"; ctx.fillText(String(it.qty || 1), qtyX, y);
+      ctx.textAlign = "right"; ctx.fillText(`${money(it.line)} ${r.currency}`, W - pad, y);
+      y += rows * 20 + 8;
+    });
+
+    y += 8; hline(ctx, pad, W - pad, y, LINE); y += 22;
+
+    // totals (right-aligned)
+    const subtotal = items.reduce((s, it) => s + (Number(it.line) || 0), 0);
+    ctx.font = FONT(600, 14); ctx.fillStyle = MUTED;
+    ctx.textAlign = "left"; ctx.fillText("Subtotal", pad + cw - 240, y);
+    ctx.textAlign = "right"; ctx.fillStyle = TEXT; ctx.fillText(`${money(subtotal)} ${r.currency}`, W - pad, y);
+    y += 22;
+    if (hasDisc) {
+      ctx.fillStyle = GREEN; ctx.textAlign = "left";
+      ctx.fillText("Discount" + (r.discLabel ? ` (${r.discLabel})` : ""), pad + cw - 240, y);
+      ctx.textAlign = "right"; ctx.fillText(`− ${money(r.discAmount)} ${r.currency}`, W - pad, y);
+      y += 22;
+    }
+    y += 6;
+    ctx.fillStyle = TEXT; ctx.font = FONT(800, 20);
+    ctx.textAlign = "left"; ctx.fillText("Total", pad + cw - 240, y + 6);
+    ctx.textAlign = "right"; ctx.fillText(`${money(r.total)} ${r.currency}`, W - pad, y + 6);
+    y += 34;
+
+    // payment method
+    ctx.textAlign = "left"; ctx.fillStyle = MUTED; ctx.font = FONT(600, 13);
+    ctx.fillText(`Paid by: ${r.method || "—"}`, pad, y); y += 28;
+
+    // customer
+    if (cust.length) {
+      hline(ctx, pad, W - pad, y - 8, LINE); y += 6;
+      ctx.fillStyle = TEXT; ctx.font = FONT(600, 13);
+      cust.forEach(c => { ctx.fillText(c, pad, y); y += 20; });
+      y += 8;
+    }
+
+    // footer
+    ctx.textAlign = "center"; ctx.fillStyle = MUTED; ctx.font = FONT(700, 13);
+    ctx.fillText(`Thank you for your order — ${r.brand || "Bahrain3D"}`, W / 2, y + 14);
+
+    return canvas;
+  }
+  function hline(ctx, x1, x2, y, color) {
+    ctx.strokeStyle = color; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x1, y + 0.5); ctx.lineTo(x2, y + 0.5); ctx.stroke();
+  }
+
+  async function generateReceipt() {
+    const r = {
+      brand: data.config.brand || "Bahrain3D",
+      whatsapp: data.config.whatsapp || "",
+      currency: cur(),
+      orderNo: $("#rc_no").value.trim(),
+      date: $("#rc_date").value,
+      method: $("#rc_method").value,
+      name: $("#rc_name").value.trim(),
+      phone: $("#rc_phone").value.trim(),
+      area: $("#rc_area").value.trim(),
+      note: $("#rc_note").value.trim(),
+      items: rcModel.items.filter(it => (it.desc || "").trim() || Number(it.line)),
+      discLabel: $("#rc_discLabel").value.trim(),
+      discAmount: parseFloat($("#rc_discAmount").value) || 0,
+      total: parseFloat($("#rc_total").value) || 0
+    };
+    if (!r.items.length) { toast("Add at least one item first"); return; }
+    const canvas = await drawReceipt(r);
+    canvas.toBlob(blob => {
+      if (rcUrl) URL.revokeObjectURL(rcUrl);
+      rcUrl = URL.createObjectURL(blob);
+      const fname = `receipt-${(r.orderNo || "bahrain3d").replace(/[^\w-]/g, "")}.png`;
+      const out = $("#rcOut");
+      out.innerHTML = `
+        <img src="${rcUrl}" alt="Receipt preview">
+        <div class="rc-out-actions">
+          <a class="btn btn-primary mini" href="${rcUrl}" download="${fname}">⬇ Download PNG</a>
+          <button class="btn btn-ghost mini" id="rcCopy">Copy image</button>
+        </div>
+        <small class="help">Save the image, then attach it in your WhatsApp chat with the customer.</small>`;
+      const copyBtn = $("#rcCopy");
+      if (copyBtn) {
+        if (!(navigator.clipboard && window.ClipboardItem)) copyBtn.style.display = "none";
+        else copyBtn.addEventListener("click", async () => {
+          try { await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]); toast("Copied to clipboard"); }
+          catch { toast("Couldn't copy — use Download instead"); }
+        });
+      }
+      out.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, "image/png");
+  }
+
+  function bindReceipts() {
+    const parse = $("#rcParse"); if (!parse) return;
+    parse.addEventListener("click", () => {
+      const txt = $("#rcPaste").value.trim();
+      fillReceiptForm(txt ? parseOrderText(txt) : { items: [blankRcItem()] });
+      if (txt) toast("Order read — check the details below");
+    });
+    $("#rcClear").addEventListener("click", () => {
+      $("#rcPaste").value = "";
+      $("#rcForm").classList.add("hidden");
+      $("#rcOut").innerHTML = "";
+      if (rcUrl) { URL.revokeObjectURL(rcUrl); rcUrl = null; }
+    });
+    $("#rcAddItem").addEventListener("click", () => { rcModel.items.push(blankRcItem()); renderRcItems(); });
+    $("#rc_discAmount").addEventListener("input", recomputeTotal);
+    $("#rcGen").addEventListener("click", generateReceipt);
+  }
+
   /* ---------------- boot ---------------- */
   let booted = false;
   function boot() {
@@ -625,10 +951,16 @@
     bindSettings();
     bindLibrary();
     bindDiscounts();
+    bindReceipts();
     $("#editorClose").addEventListener("click", closeEditor);
     $("#cancelEdit").addEventListener("click", closeEditor);
     $("#saveEdit").addEventListener("click", saveEditor);
-    $("#editor").addEventListener("click", e => { if (e.target.id === "editor") closeEditor(); });
+    // Close only on a genuine backdrop click — i.e. the mouse was pressed AND released on the
+    // backdrop. Without the mousedown check, selecting text in a field and releasing the drag
+    // over the backdrop counts as a click on it and wrongly closes the editor (losing all input).
+    let editorDownOnScrim = false;
+    $("#editor").addEventListener("mousedown", e => { editorDownOnScrim = e.target.id === "editor"; });
+    $("#editor").addEventListener("click", e => { if (e.target.id === "editor" && editorDownOnScrim) closeEditor(); });
     $("#exportBtn").addEventListener("click", exportJson);
     $("#loadLiveBtn").addEventListener("click", () => { if (confirm("Replace your current edits with the live products.json from the site?")) loadLive(false); });
     $("#importBtn").addEventListener("click", () => $("#importFile").click());
