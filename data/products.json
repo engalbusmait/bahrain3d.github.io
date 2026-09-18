@@ -506,21 +506,21 @@
           "type": "select",
           "values": [
             {
-              "label_en": "50 cm",
-              "label_ar": "50 سم",
-              "value": "50 cm",
+              "label_en": "5 cm",
+              "label_ar": "5 سم",
+              "value": "5 cm",
               "priceDelta": 0
             },
             {
-              "label_en": "70 cm",
-              "label_ar": "70 سم",
-              "value": "70 cm",
+              "label_en": "7 cm",
+              "label_ar": "7 سم",
+              "value": "7 cm",
               "priceDelta": 0.5
             },
             {
-              "label_en": "100 cm",
-              "label_ar": "100 سم",
-              "value": "100 cm",
+              "label_en": "10 cm",
+              "label_ar": "10 سم",
+              "value": "10 cm",
               "priceDelta": 1
             }
           ]
