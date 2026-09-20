@@ -69,6 +69,7 @@
     renderSettings();
     renderLibrary();
     renderDiscounts();
+    renderDelivery();
     renderList();
     autosave();
   }
@@ -92,6 +93,7 @@
   function migrateData() {
     ensureLibrary();
     data.discounts = Array.isArray(data.discounts) ? data.discounts : [];
+    data.delivery = Array.isArray(data.delivery) ? data.delivery : [];
     data.library.materials = data.library.materials.filter(m => (m.label_en || "").trim());
     data.library.colors = data.library.colors.filter(c => (c.label_en || "").trim());
     data.library.materials.forEach(m => delete m.priceDelta);
@@ -134,9 +136,9 @@
     try {
       const res = await fetch("data/products.json", { cache: "no-store" });
       const j = await res.json();
-      data = { config: j.config || {}, library: j.library || {}, discounts: j.discounts || [], products: j.products || [] };
+      data = { config: j.config || {}, library: j.library || {}, discounts: j.discounts || [], delivery: j.delivery || [], products: j.products || [] };
       migrateData();
-      renderSettings(); renderLibrary(); renderDiscounts(); renderList(); autosave();
+      renderSettings(); renderLibrary(); renderDiscounts(); renderDelivery(); renderList(); autosave();
       if (!silent) toast("Loaded live products.json");
     } catch (e) {
       if (!silent) toast("Couldn't load live file");
@@ -260,6 +262,38 @@
       data.discounts = data.discounts || [];
       data.discounts.push({ code: "", percent: 10 });
       autosave(); renderDiscounts();
+    });
+  }
+
+  /* ---------------- delivery options ---------------- */
+  function renderDelivery() {
+    const wrap = $("#deliveryList");
+    if (!wrap) return;
+    data.delivery = data.delivery || [];
+    wrap.innerHTML = data.delivery.map((o, i) => `
+      <div class="deliv-adm-row" data-dv="${i}">
+        <input placeholder="Method EN (e.g. Home delivery)" data-dvf="label_en" value="${escapeHtml(o.label_en || "")}">
+        <input placeholder="بالعربية (مثال: توصيل)" dir="rtl" data-dvf="label_ar" value="${escapeHtml(o.label_ar || "")}">
+        <div class="deliv-adm-price"><input type="number" min="0" step="0.001" placeholder="0" data-dvf="price" value="${o.price || 0}"><span>${cur()}</span></div>
+        <button class="icon-btn" data-deldv="${i}" title="Remove option">×</button>
+      </div>`).join("") || `<p class="hint" style="margin:0">No delivery options yet — add one below (e.g. Pickup = 0, Home delivery = 1.5).</p>`;
+
+    $$("[data-dvf]", wrap).forEach(el => el.addEventListener("input", () => {
+      const o = data.delivery[+el.closest("[data-dv]").dataset.dv];
+      const f = el.dataset.dvf;
+      o[f] = f === "price" ? (parseFloat(el.value) || 0) : el.value;
+      autosave();
+    }));
+    $$("[data-deldv]", wrap).forEach(b => b.addEventListener("click", () => {
+      data.delivery.splice(+b.dataset.deldv, 1); autosave(); renderDelivery();
+    }));
+  }
+  function bindDelivery() {
+    const add = $("#addDelivery");
+    if (add) add.addEventListener("click", () => {
+      data.delivery = data.delivery || [];
+      data.delivery.push({ label_en: "", label_ar: "", price: 0 });
+      autosave(); renderDelivery();
     });
   }
 
@@ -630,7 +664,8 @@
   function exportJson() {
     ensureLibrary();
     const discounts = (data.discounts || []).filter(d => (d.code || "").trim()).map(d => ({ code: d.code.trim(), percent: Number(d.percent) || 0 }));
-    const out = JSON.stringify({ config: data.config, library: data.library, discounts, products: data.products }, null, 2);
+    const delivery = (data.delivery || []).filter(o => (o.label_en || o.label_ar || "").trim()).map(o => ({ label_en: (o.label_en || "").trim(), label_ar: (o.label_ar || "").trim(), price: Number(o.price) || 0 }));
+    const out = JSON.stringify({ config: data.config, library: data.library, discounts, delivery, products: data.products }, null, 2);
     const blob = new Blob([out], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -645,9 +680,9 @@
     reader.onload = () => {
       try {
         const j = JSON.parse(reader.result);
-        data = { config: j.config || {}, library: j.library || {}, discounts: j.discounts || [], products: j.products || [] };
+        data = { config: j.config || {}, library: j.library || {}, discounts: j.discounts || [], delivery: j.delivery || [], products: j.products || [] };
         migrateData();
-        renderSettings(); renderLibrary(); renderDiscounts(); renderList(); autosave();
+        renderSettings(); renderLibrary(); renderDiscounts(); renderDelivery(); renderList(); autosave();
         toast("Imported");
       } catch (e) { toast("That file isn't valid JSON"); }
     };
@@ -667,7 +702,7 @@
 
   // Parse the WhatsApp order text produced by store.js buildMessage(). Tolerant: unknown lines are ignored.
   function parseOrderText(text) {
-    const model = { orderNo: "", name: "", phone: "", area: "", notes: "", items: [], discLabel: "", discAmount: 0, total: 0 };
+    const model = { orderNo: "", name: "", phone: "", area: "", notes: "", items: [], discLabel: "", discAmount: 0, delivLabel: "", delivAmount: 0, total: 0 };
     const lines = String(text || "").split(/\r?\n/);
     let cur = null;
     lines.forEach(raw => {
@@ -678,6 +713,7 @@
       if (cur && (m = line.match(/^\s*Line:\s*([\d.]+)/i))) { cur.line = parseFloat(m[1]) || 0; return; }
       if (cur && (m = line.match(/^\s*-\s+(.+?):\s+(.+?)\s*$/))) { cur.opts.push(`${m[1].trim()}: ${m[2].trim()}`); return; }
       if (m = line.match(/^\s*Discount code:\s*(.+?)\s+-([\d.]+)/i)) { model.discLabel = m[1].trim(); model.discAmount = parseFloat(m[2]) || 0; return; }
+      if (m = line.match(/^\s*Delivery:\s*(.+?)\s*\(([\d.]+)/i)) { model.delivLabel = m[1].trim(); model.delivAmount = parseFloat(m[2]) || 0; return; }
       if (m = line.match(/^\s*Total:\s*([\d.]+)/i)) { model.total = parseFloat(m[1]) || 0; return; }
       if (m = line.match(/^\s*Customer:\s*(.+)$/i)) { model.name = m[1].trim(); return; }
       if (m = line.match(/^\s*Phone:\s*(.+)$/i)) { model.phone = m[1].trim(); return; }
@@ -698,6 +734,8 @@
     $("#rc_date").value = todayISO();
     $("#rc_discLabel").value = model.discLabel || "";
     $("#rc_discAmount").value = model.discAmount || 0;
+    $("#rc_delivLabel").value = model.delivLabel || "";
+    $("#rc_delivAmount").value = model.delivAmount || 0;
     $("#rcCur").textContent = cur();
     rcModel.items = (model.items && model.items.length) ? model.items.map(it => ({ desc: it.desc || "", qty: it.qty || 1, line: it.line || 0 })) : [blankRcItem()];
     renderRcItems();
@@ -731,7 +769,8 @@
   function recomputeTotal() {
     const subtotal = rcModel.items.reduce((s, it) => s + (Number(it.line) || 0), 0);
     const disc = parseFloat($("#rc_discAmount").value) || 0;
-    $("#rc_total").value = money(Math.max(0, subtotal - disc));
+    const deliv = parseFloat($("#rc_delivAmount").value) || 0;
+    $("#rc_total").value = money(Math.max(0, subtotal - disc + deliv));
   }
 
   function loadImg(src) {
@@ -780,10 +819,11 @@
 
     // compute total height
     const hasDisc = (Number(r.discAmount) || 0) > 0;
+    const hasDeliv = !!(r.delivLabel || (Number(r.delivAmount) || 0) > 0);
     const cust = [r.name && `Customer: ${r.name}`, r.phone && `Phone: ${r.phone}`, r.area && `Area: ${r.area}`, r.note && `Note: ${r.note}`].filter(Boolean);
     let H = pad + 56 + 24 + 22 + 22;
     items.forEach(it => { H += Math.max(1, it.wl.length) * 20 + 8; });
-    H += 16 + 22 + (hasDisc ? 22 : 0) + 40 + 28;
+    H += 16 + 22 + (hasDisc ? 22 : 0) + (hasDeliv ? 22 : 0) + 40 + 28;
     H += (cust.length ? cust.length * 20 + 14 : 0);
     H += 42 + pad;
 
@@ -853,6 +893,13 @@
       ctx.textAlign = "right"; ctx.fillText(`− ${money(r.discAmount)} ${r.currency}`, W - pad, y);
       y += 22;
     }
+    if (hasDeliv) {
+      ctx.font = FONT(600, 14); ctx.fillStyle = MUTED; ctx.textAlign = "left";
+      ctx.fillText(r.delivLabel || "Delivery", pad + cw - 240, y);
+      ctx.textAlign = "right"; ctx.fillStyle = TEXT;
+      ctx.fillText((Number(r.delivAmount) || 0) > 0 ? `${money(r.delivAmount)} ${r.currency}` : "Free", W - pad, y);
+      y += 22;
+    }
     y += 6;
     ctx.fillStyle = TEXT; ctx.font = FONT(800, 20);
     ctx.textAlign = "left"; ctx.fillText("Total", pad + cw - 240, y + 6);
@@ -897,6 +944,8 @@
       items: rcModel.items.filter(it => (it.desc || "").trim() || Number(it.line)),
       discLabel: $("#rc_discLabel").value.trim(),
       discAmount: parseFloat($("#rc_discAmount").value) || 0,
+      delivLabel: $("#rc_delivLabel").value.trim(),
+      delivAmount: parseFloat($("#rc_delivAmount").value) || 0,
       total: parseFloat($("#rc_total").value) || 0
     };
     if (!r.items.length) { toast("Add at least one item first"); return; }
@@ -940,6 +989,7 @@
     });
     $("#rcAddItem").addEventListener("click", () => { rcModel.items.push(blankRcItem()); renderRcItems(); });
     $("#rc_discAmount").addEventListener("input", recomputeTotal);
+    $("#rc_delivAmount").addEventListener("input", recomputeTotal);
     $("#rcGen").addEventListener("click", generateReceipt);
   }
 
@@ -951,6 +1001,7 @@
     bindSettings();
     bindLibrary();
     bindDiscounts();
+    bindDelivery();
     bindReceipts();
     $("#editorClose").addEventListener("click", closeEditor);
     $("#cancelEdit").addEventListener("click", closeEditor);

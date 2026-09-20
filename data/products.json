@@ -217,6 +217,18 @@
       "percent": 8
     }
   ],
+  "delivery": [
+    {
+      "label_en": "Pickup",
+      "label_ar": "استلام من المتجر",
+      "price": 0
+    },
+    {
+      "label_en": "Home delivery",
+      "label_ar": "توصيل للمنزل",
+      "price": 1.5
+    }
+  ],
   "products": [
     {
       "id": "p_nameplate",
