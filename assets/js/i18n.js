@@ -49,7 +49,9 @@ window.I18N = {
     footer_rights: "All rights reserved.",
     contact_wa: "Contact us on WhatsApp",
     color: "Color",
-    size: "Size"
+    size: "Size",
+    delivery_method: "Delivery method",
+    free: "Free"
   },
   ar: {
     dir: "rtl",
@@ -100,6 +102,8 @@ window.I18N = {
     footer_rights: "جميع الحقوق محفوظة.",
     contact_wa: "تواصل معنا عبر الواتساب",
     color: "اللون",
-    size: "الحجم"
+    size: "الحجم",
+    delivery_method: "طريقة التوصيل",
+    free: "مجاني"
   }
 };

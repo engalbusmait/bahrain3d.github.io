@@ -330,6 +330,16 @@ img.logo { padding: 0; }
 .discount-msg { margin-top: 6px; font-size: 13px; font-weight: 700; min-height: 18px; }
 .msg-ok { color: var(--ok); }
 .msg-err { color: var(--danger); }
+.deliv-opts { display: flex; flex-direction: column; gap: 8px; }
+.deliv-opt {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 14px; transition: border-color .15s;
+}
+.deliv-opt:hover { border-color: var(--accent-2); }
+.deliv-opt:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.deliv-opt input { accent-color: var(--accent); width: 18px; height: 18px; flex: none; }
+.deliv-opt .deliv-name { flex: 1; font-weight: 600; font-size: 14px; }
+.deliv-opt .deliv-fee { font-weight: 800; font-size: 14px; }
 
 /* Confirmation / QR */
 .confirm { text-align: center; padding: 30px 26px 34px; }

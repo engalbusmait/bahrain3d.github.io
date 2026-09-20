@@ -13,6 +13,8 @@
     library: { colors: [], materials: [] },
     discounts: [],
     discount: null,   // applied discount {code, percent}
+    deliveryOptions: [],  // configured delivery/pickup methods {label_en, label_ar, price}
+    delivery: null,       // chosen delivery method for the open checkout
     products: [],
     cart: loadCart(),
     current: null,        // product open in modal
@@ -397,7 +399,9 @@
     const subtotal = cartTotal();
     const percent = state.discount ? (Number(state.discount.percent) || 0) : 0;
     const amount = subtotal * percent / 100;
-    return { subtotal, percent, amount, total: subtotal - amount, code: state.discount ? state.discount.code : "" };
+    // delivery is a flat fee added on top of the (discounted) goods total
+    const delivery = state.delivery ? (Number(state.delivery.price) || 0) : 0;
+    return { subtotal, percent, amount, delivery, total: subtotal - amount + delivery, code: state.discount ? state.discount.code : "" };
   }
   function applyDiscountCode() {
     const raw = ($("#cCode").value || "").trim();
@@ -417,18 +421,38 @@
     const el = $("#summaryLines");
     if (!el) return;
     const d = discountInfo();
-    el.innerHTML = d.percent > 0
-      ? `<div class="summary-row"><span>${t("subtotal")}</span><span>${money(d.subtotal)} ${currency()}</span></div>
-         <div class="summary-row" style="color:var(--ok)"><span>${t("discount")} (${d.code} · ${d.percent}%)</span><span>−${money(d.amount)} ${currency()}</span></div>
-         <div class="summary-total"><span>${t("total")}</span><span>${money(d.total)} ${currency()}</span></div>`
-      : `<div class="summary-total"><span>${t("total")}</span><span>${money(d.subtotal)} ${currency()}</span></div>`;
+    const showBreakdown = d.percent > 0 || !!state.delivery;
+    const rows = [];
+    if (showBreakdown) rows.push(`<div class="summary-row"><span>${t("subtotal")}</span><span>${money(d.subtotal)} ${currency()}</span></div>`);
+    if (d.percent > 0) rows.push(`<div class="summary-row" style="color:var(--ok)"><span>${t("discount")} (${d.code} · ${d.percent}%)</span><span>−${money(d.amount)} ${currency()}</span></div>`);
+    if (state.delivery) {
+      const feeTxt = d.delivery > 0 ? `${money(d.delivery)} ${currency()}` : t("free");
+      rows.push(`<div class="summary-row"><span>${L(state.delivery, "label")}</span><span>${feeTxt}</span></div>`);
+    }
+    rows.push(`<div class="summary-total"><span>${t("total")}</span><span>${money(showBreakdown ? d.total : d.subtotal)} ${currency()}</span></div>`);
+    el.innerHTML = rows.join("");
   }
 
   /* ---------- checkout ---------- */
   function openCheckout() {
     if (!state.cart.length) return;
     state.discount = null; // fresh each time the checkout opens
+    state.delivery = state.deliveryOptions.length ? state.deliveryOptions[0] : null; // default to first method
     closeDrawer();
+    const delivHtml = state.deliveryOptions.length ? `
+        <div class="field">
+          <label>${t("delivery_method")}</label>
+          <div class="deliv-opts" id="delivOpts">
+            ${state.deliveryOptions.map((o, i) => {
+              const feeTxt = (Number(o.price) || 0) > 0 ? `${money(o.price)} ${currency()}` : t("free");
+              return `<label class="deliv-opt">
+                <input type="radio" name="deliv" value="${i}" ${i === 0 ? "checked" : ""}>
+                <span class="deliv-name">${L(o, "label")}</span>
+                <span class="deliv-fee">${feeTxt}</span>
+              </label>`;
+            }).join("")}
+          </div>
+        </div>` : "";
     const m = $("#checkoutModal .modal-inner");
     m.innerHTML = `
       <div class="checkout">
@@ -437,6 +461,7 @@
         <div class="field"><label>${t("name")}</label><input id="cName" type="text" autocomplete="name"></div>
         <div class="field"><label>${t("phone")} <span class="opt-tag">(${t("optional")})</span></label><input id="cPhone" type="tel" autocomplete="tel"></div>
         <div class="field"><label>${t("area")}</label><input id="cArea" type="text"></div>
+        ${delivHtml}
         <div class="field"><label>${t("notes")} <span class="opt-tag">(${t("optional")})</span></label><textarea id="cNotes"></textarea></div>
         <div class="field">
           <label>${t("discount_code")} <span class="opt-tag">(${t("optional")})</span></label>
@@ -451,6 +476,10 @@
         <p class="note">${L(state.config, "delivery_note")}</p>
       </div>`;
     renderCheckoutSummary();
+    $$('input[name="deliv"]', m).forEach(r => r.addEventListener("change", () => {
+      state.delivery = state.deliveryOptions[+r.value] || null;
+      renderCheckoutSummary();
+    }));
     $("#applyCode").addEventListener("click", applyDiscountCode);
     $("#cCode").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); applyDiscountCode(); } });
     $("#placeBtn").addEventListener("click", placeOrder);
@@ -478,9 +507,11 @@
     });
     lines.push("");
     const d = discountInfo();
-    if (d.percent > 0) {
+    const showBreakdown = d.percent > 0 || !!state.delivery;
+    if (showBreakdown) {
       lines.push(`Subtotal: ${money(d.subtotal)} ${currency()}`);
-      lines.push(`Discount code: ${d.code} (${d.percent}% off) -${money(d.amount)} ${currency()}`);
+      if (d.percent > 0) lines.push(`Discount code: ${d.code} (${d.percent}% off) -${money(d.amount)} ${currency()}`);
+      if (state.delivery) lines.push(`Delivery: ${state.delivery.label_en || "Delivery"} (${money(d.delivery)} ${currency()})`);
       lines.push(`Total: ${money(d.total)} ${currency()}`);
     } else {
       lines.push(`Total: ${money(d.subtotal)} ${currency()}`);
@@ -597,11 +628,13 @@
       state.config = data.config || {};
       state.library = data.library || { colors: [], materials: [] };
       state.discounts = data.discounts || [];
+      state.deliveryOptions = data.delivery || [];
       state.products = data.products || [];
     } catch (e) {
       state.config = { brand: "Bahrain3D", whatsapp: "97334499469", currency: "BHD" };
       state.library = { colors: [], materials: [] };
       state.discounts = [];
+      state.deliveryOptions = [];
       state.products = [];
     }
 
