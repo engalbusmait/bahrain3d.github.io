@@ -219,18 +219,18 @@
   ],
   "delivery": [
     {
-      "label_en": "",
+      "label_en": "Personal pickup (Jaw area)",
       "label_ar": "استلام شخصي (منطقة جو)",
       "price": 0
     },
     {
-      "label_en": "",
+      "label_en": "Personal pickup (Hidd area)",
       "label_ar": "استلام شخصي (منطقة الحد)",
       "price": 0
     },
     {
-      "label_en": "",
-      "label_ar": "توصيل",
+      "label_en": "Delivery within Bahrain",
+      "label_ar": "توصيل داخل البحرين",
       "price": 1.5
     }
   ],
