@@ -51,7 +51,10 @@ window.I18N = {
     color: "Color",
     size: "Size",
     delivery_method: "Delivery method",
-    free: "Free"
+    free: "Free",
+    share: "Share this product",
+    link_copied: "Link copied to clipboard",
+    copy_link: "Copy this link:"
   },
   ar: {
     dir: "rtl",
@@ -104,6 +107,9 @@ window.I18N = {
     color: "اللون",
     size: "الحجم",
     delivery_method: "طريقة التوصيل",
-    free: "مجاني"
+    free: "مجاني",
+    share: "مشاركة هذا المنتج",
+    link_copied: "تم نسخ الرابط",
+    copy_link: "انسخ هذا الرابط:"
   }
 };

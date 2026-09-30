@@ -190,9 +190,12 @@
           <button type="button" id="qPlus" aria-label="+">+</button>
         </div>
       </div>
-      <button class="btn btn-primary btn-lg btn-block" id="addBtn">${t("add_to_cart")}</button>`;
+      <button class="btn btn-primary btn-lg btn-block" id="addBtn">${t("add_to_cart")}</button>
+      <button class="btn btn-ghost btn-block" id="shareBtn" style="margin-top:10px">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-inline-end:6px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>${t("share")}</button>`;
 
     renderGallery(p);
+    $("#shareBtn").addEventListener("click", shareProduct);
 
     // render option groups
     const optWrap = $("#pdOptions");
@@ -313,6 +316,25 @@
   function updatePdPrice() {
     const total = unitPrice() * Math.max(1, state.qty || 1);
     $("#pdPrice").innerHTML = `${money(total)}<span class="cur">${currency()}</span>`;
+  }
+
+  // Share the product's canonical link: native share sheet on mobile (WhatsApp/IG/…),
+  // copy-to-clipboard fallback on desktop.
+  async function shareProduct() {
+    const canonical = document.querySelector('link[rel="canonical"]');
+    const url = (canonical && canonical.href) || location.href;
+    const name = L(state.current, "name");
+    const title = `${name} — ${state.config.brand || "Bahrain3D"}`;
+    if (navigator.share) {
+      try { await navigator.share({ title, text: name, url }); } catch (e) { /* user cancelled */ }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast(t("link_copied"));
+    } catch (e) {
+      window.prompt(t("copy_link"), url);
+    }
   }
 
   function addCurrentToCart() {
