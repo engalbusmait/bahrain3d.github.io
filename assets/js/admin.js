@@ -6,8 +6,11 @@
   "use strict";
 
   const LS_DRAFT = "b3d_admin_draft";
-  const IMG_MAX = 1000;      // max image dimension (px)
-  const IMG_QUALITY = 0.82;  // jpeg quality
+  const IMG_MAX = 1200;       // full image max long side (px)
+  const IMG_QUALITY = 0.82;   // full webp quality
+  const THUMB_MAX = 480;      // thumbnail max long side (px)
+  const THUMB_QUALITY = 0.75; // thumbnail webp quality
+  const OG_W = 1200, OG_H = 630, OG_MAX_BYTES = 250 * 1024;
 
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -19,7 +22,7 @@
   let rcUrl = null;              // object URL of the last generated PNG (revoked on regen)
 
   const CFG_FIELDS = [
-    "brand", "whatsapp", "currency",
+    "brand", "whatsapp", "currency", "google_site_verification",
     "tagline_en", "tagline_ar",
     "hero_title_en", "hero_title_ar",
     "hero_subtitle_en", "hero_subtitle_ar",
@@ -498,7 +501,7 @@
     const list = edit.images;
     const thumbs = list.map((src, i) => `
       <div class="img-thumb ${i === 0 ? "primary" : ""}" data-i="${i}">
-        <img src="${src}" alt="">
+        <img src="${src.indexOf("data:") === 0 ? src : "/" + String(src).replace(/^\/+/, "")}" alt="" decoding="async">
         ${i === 0 ? `<span class="img-badge">Main</span>` : ""}
         <div class="img-thumb-ctl">
           ${i > 0 ? `<button type="button" class="img-mini" data-primary="${i}" title="Make main photo">★</button>` : ""}
@@ -520,19 +523,46 @@
     $$("[data-right]", area).forEach(b => b.addEventListener("click", () => { const i = +b.dataset.right; [edit.images[i + 1], edit.images[i]] = [edit.images[i], edit.images[i + 1]]; renderImages(); }));
   }
 
-  function resizeToDataURL(fileDataUrl) {
+  // Draw a source data URL onto a white canvas scaled so its long side <= maxSide,
+  // return a data URL of the given mime/quality.
+  function rasterize(fileDataUrl, maxSide, mime, quality) {
     return new Promise(resolve => {
       const img = new Image();
       img.onload = () => {
-        let { width, height } = img;
-        if (width > height && width > IMG_MAX) { height = Math.round(height * IMG_MAX / width); width = IMG_MAX; }
-        else if (height > IMG_MAX) { width = Math.round(width * IMG_MAX / height); height = IMG_MAX; }
+        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+        const width = Math.max(1, Math.round(img.width * scale));
+        const height = Math.max(1, Math.round(img.height * scale));
         const c = document.createElement("canvas");
         c.width = width; c.height = height;
         const ctx = c.getContext("2d");
         ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(c.toDataURL("image/jpeg", IMG_QUALITY));
+        resolve(c.toDataURL(mime, quality));
+      };
+      img.onerror = () => resolve(null);
+      img.src = fileDataUrl;
+    });
+  }
+  // Full-size WebP data URL kept in memory while editing.
+  const resizeToDataURL = (fileDataUrl) => rasterize(fileDataUrl, IMG_MAX, "image/webp", IMG_QUALITY);
+
+  // 1200x630 center-cropped JPEG for link previews (WhatsApp/IG), kept under OG_MAX_BYTES.
+  function makeOgDataUrl(fileDataUrl) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas");
+        c.width = OG_W; c.height = OG_H;
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, OG_W, OG_H);
+        const sw = img.width, sh = img.height, target = OG_W / OG_H;
+        let sx = 0, sy = 0, cw = sw, ch = sh;
+        if (sw / sh > target) { cw = Math.round(sh * target); sx = Math.round((sw - cw) / 2); }
+        else { ch = Math.round(sw / target); sy = Math.round((sh - ch) / 2); }
+        ctx.drawImage(img, sx, sy, cw, ch, 0, 0, OG_W, OG_H);
+        let q = 0.85, url = c.toDataURL("image/jpeg", q);
+        while (url.length * 0.75 > OG_MAX_BYTES && q > 0.4) { q -= 0.05; url = c.toDataURL("image/jpeg", q); }
+        resolve(url);
       };
       img.onerror = () => resolve(null);
       img.src = fileDataUrl;
@@ -661,18 +691,109 @@
   }
 
   /* ---------------- import / export ---------------- */
-  function exportJson() {
-    ensureLibrary();
-    const discounts = (data.discounts || []).filter(d => (d.code || "").trim()).map(d => ({ code: d.code.trim(), percent: Number(d.percent) || 0 }));
-    const delivery = (data.delivery || []).filter(o => (o.label_en || o.label_ar || "").trim()).map(o => ({ label_en: (o.label_en || "").trim(), label_ar: (o.label_ar || "").trim(), price: Number(o.price) || 0 }));
-    const out = JSON.stringify({ config: data.config, library: data.library, discounts, delivery, products: data.products }, null, 2);
-    const blob = new Blob([out], { type: "application/json" });
+  const cleanDiscounts = () => (data.discounts || []).filter(d => (d.code || "").trim()).map(d => ({ code: d.code.trim(), percent: Number(d.percent) || 0 }));
+  const cleanDelivery = () => (data.delivery || []).filter(o => (o.label_en || o.label_ar || "").trim()).map(o => ({ label_en: (o.label_en || "").trim(), label_ar: (o.label_ar || "").trim(), price: Number(o.price) || 0 }));
+  const isDataUri = (s) => typeof s === "string" && s.indexOf("data:") === 0;
+  const thumbPathOf = (s) => String(s).replace(/\.(webp|jpe?g|png)$/i, "-thumb.webp");
+
+  // small, stable content hash (FNV-1a) for cache-busting ?v=
+  function hashVersion(obj) {
+    const str = JSON.stringify(obj);
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0; }
+    return ("0000000" + h.toString(16)).slice(-8);
+  }
+  function downloadBlob(blob, name) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = "products.json";
+    a.href = url; a.download = name;
     document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast("Downloaded products.json — now upload it to GitHub");
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
+  function exportJson() {
+    ensureLibrary();
+    const out = { config: data.config, library: data.library, discounts: cleanDiscounts(), delivery: cleanDelivery(), products: data.products };
+    out.version = hashVersion(out);
+    downloadBlob(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }), "products.json");
+    toast("Downloaded products.json — for images/SEO use “Export site package” instead");
+  }
+
+  const dataUriToBlob = async (uri) => (await fetch(uri)).blob();
+  async function fetchAsset(pathRel) {
+    try { const r = await fetch("/" + String(pathRel).replace(/^\/+/, "")); if (r.ok) return await r.blob(); } catch (e) { /* offline / file:// */ }
+    return null;
+  }
+
+  // Build the full site ZIP: products.json (paths) + images + generated HTML/SEO.
+  async function exportSitePackage() {
+    if (typeof JSZip === "undefined" || !window.SiteGen) { toast("Export tools didn't load — reload the page"); return; }
+    ensureLibrary();
+    const btn = $("#exportZipBtn");
+    if (btn) { btn.disabled = true; }
+    toast("Building site package…");
+    try {
+      const zip = new JSZip();
+      const missing = [];
+      const products = [];
+      for (const p of data.products) {
+        const cp = JSON.parse(JSON.stringify(p));
+        const src = Array.isArray(p.images) ? p.images : (p.image ? [p.image] : []);
+        const base = "images/products/" + p.id;
+        const outImages = [];
+        for (let i = 0; i < src.length; i++) {
+          const val = src[i];
+          const fullPath = base + "/" + i + ".webp";
+          const thumbPath = base + "/" + i + "-thumb.webp";
+          if (isDataUri(val)) {
+            zip.file(fullPath, await dataUriToBlob(val));                                   // full kept as-is (no re-encode)
+            const th = await rasterize(val, THUMB_MAX, "image/webp", THUMB_QUALITY);
+            if (th) zip.file(thumbPath, await dataUriToBlob(th));
+            if (i === 0) { const og = await makeOgDataUrl(val); if (og) zip.file(base + "/og.jpg", await dataUriToBlob(og)); }
+          } else {
+            const fb = await fetchAsset(val); if (fb) zip.file(fullPath, fb); else missing.push(val);
+            const tb = await fetchAsset(thumbPathOf(val)); if (tb) zip.file(thumbPath, tb);
+            if (i === 0) { const ob = await fetchAsset(base + "/og.jpg"); if (ob) zip.file(base + "/og.jpg", ob); }
+          }
+          outImages.push(fullPath);
+        }
+        cp.images = outImages;
+        delete cp.image;
+        products.push(cp);
+      }
+      const out = { config: data.config, library: data.library, discounts: cleanDiscounts(), delivery: cleanDelivery(), products };
+      out.version = hashVersion(out);
+      zip.file("data/products.json", JSON.stringify(out, null, 2));
+      const built = window.SiteGen.buildAll(out);
+      zip.file("index.html", built.index);
+      built.products.forEach(pg => zip.file(pg.path, pg.html));
+      zip.file("sitemap.xml", built.sitemap);
+      zip.file("robots.txt", built.robots);
+      // Bundle the PUBLIC site's code/assets too, so a single upload is a COMPLETE deploy
+      // (fetched relative to wherever this admin page is served). The admin itself
+      // (admin.html / admin.js / jszip.min.js) is intentionally NOT bundled — it stays
+      // offline and is never deployed to the public site.
+      const SITE_ASSETS = [
+        "assets/css/styles.css",
+        "assets/js/qrcode.min.js", "assets/js/i18n.js", "assets/js/sitegen.js", "assets/js/store.js",
+        "assets/img/favicon.svg", "assets/img/logo.webp", "assets/img/logo.png", "assets/img/og-default.jpg",
+        "CNAME", ".nojekyll"
+      ];
+      for (const a of SITE_ASSETS) {
+        const b = await fetchAsset(a);
+        if (b) zip.file(a, b); else missing.push(a);
+      }
+      const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+      downloadBlob(blob, "bahrain3d-site.zip");
+      toast(missing.length
+        ? `Package ready, but ${missing.length} file(s) couldn't be bundled — run admin from a local server (python -m http.server) so it can read them.`
+        : "Site package ready — unzip and upload everything to GitHub");
+    } catch (e) {
+      console.error(e);
+      toast("Export failed: " + ((e && e.message) || e));
+    } finally {
+      if (btn) { btn.disabled = false; }
+    }
   }
 
   function importJson(file) {
@@ -836,7 +957,7 @@
 
     let y = pad;
     // logo
-    const logo = await loadImg("assets/img/logo.jpg");
+    const logo = await loadImg("assets/img/logo.png");
     if (logo) {
       ctx.save(); roundRect(ctx, pad, y, 48, 48, 10); ctx.clip();
       ctx.drawImage(logo, pad, y, 48, 48); ctx.restore();
@@ -1013,6 +1134,7 @@
     $("#editor").addEventListener("mousedown", e => { editorDownOnScrim = e.target.id === "editor"; });
     $("#editor").addEventListener("click", e => { if (e.target.id === "editor" && editorDownOnScrim) closeEditor(); });
     $("#exportBtn").addEventListener("click", exportJson);
+    { const z = $("#exportZipBtn"); if (z) z.addEventListener("click", exportSitePackage); }
     $("#loadLiveBtn").addEventListener("click", () => { if (confirm("Replace your current edits with the live products.json from the site?")) loadLive(false); });
     $("#importBtn").addEventListener("click", () => $("#importFile").click());
     $("#importFile").addEventListener("change", e => { if (e.target.files[0]) importJson(e.target.files[0]); e.target.value = ""; });

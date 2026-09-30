@@ -93,6 +93,9 @@
   }
 
   function productMinPrice(p) {
+    // Single source of truth: sitegen computes the same "from" price used in the pre-rendered
+    // pages. Fall back to the identical rule inline if sitegen didn't load.
+    if (window.SiteGen && typeof window.SiteGen.minPrice === "function") return window.SiteGen.minPrice(p);
     let min = Number(p.price) || 0;
     getOptions(p).forEach(g => {
       if (g.type === "text") { if (g.required) min += Number(g.priceDelta) || 0; return; }
@@ -110,21 +113,41 @@
         <path d="M3.27 6.96 12 12.01l8.73-5.05"/><path d="M12 22.08V12"/>
       </svg></div></div>`;
   }
-  const media = (img) => img ? `<img src="${img}" alt="" loading="lazy">` : placeholder();
   // a product's images as an array (supports legacy single `image`)
   const imgs = (p) => (Array.isArray(p.images) && p.images.length) ? p.images : (p.image ? [p.image] : []);
+  // a real file path vs an inline data: URI / empty value
+  const isPath = (s) => typeof s === "string" && !!s && !s.startsWith("data:");
+  // derive the thumbnail path for a full-image path; data: URIs (legacy) pass through unchanged
+  const thumbOf = (s) => isPath(s) ? s.replace(/\.(webp|jpe?g|png)$/i, "-thumb.webp") : s;
+  // render an <img> with lazy/eager loading + optional dimensions; placeholder when empty
+  function imgTag(src, alt, opts) {
+    opts = opts || {};
+    if (!src) return placeholder();
+    const load = opts.eager ? `loading="eager" fetchpriority="high"` : `loading="lazy"`;
+    const dim = (opts.w && opts.h) ? ` width="${opts.w}" height="${opts.h}"` : "";
+    return `<img src="${src}" alt="${esc(alt || "")}" decoding="async" ${load}${dim}>`;
+  }
+  const media = (img) => imgTag(img, "");
+  // Link to a product's static page (/p/<slug>/) via the shared sitegen module when present;
+  // falls back to the query-string page so the site still works if sitegen didn't load.
+  function productHref(p) {
+    if (window.SiteGen && typeof window.SiteGen.productPath === "function") {
+      return window.SiteGen.productPath(p, state.products);
+    }
+    return `product.html?id=${encodeURIComponent(p.id)}`;
+  }
 
   /* ---------- render products ---------- */
   function renderProducts() {
     const grid = $("#grid");
     if (!grid) return;
     if (!state.products.length) { grid.innerHTML = `<p class="muted">—</p>`; return; }
-    grid.innerHTML = state.products.map(p => {
+    grid.innerHTML = state.products.map((p, i) => {
       const colorGroup = getOptions(p).find(g => g.type === "color" || g.type === "colormat");
       const swatches = colorGroup ? colorGroup.values.slice(0, 5).map(v =>
         `<span class="dot" style="background:${v.swatch || "#ccc"}" title="${L(v, "label")}"></span>`).join("") : "";
-      return `<a class="card" href="product.html?id=${encodeURIComponent(p.id)}">
-        <div class="card-media">${media(imgs(p)[0])}${imgs(p).length > 1 ? `<span class="media-count"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 21h12a2 2 0 0 0 2-2V9"/></svg>${imgs(p).length}</span>` : ""}</div>
+      return `<a class="card" href="${productHref(p)}">
+        <div class="card-media">${imgTag(thumbOf(imgs(p)[0]), L(p, "name"), { eager: i === 0, w: 400, h: 300 })}${imgs(p).length > 1 ? `<span class="media-count"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 21h12a2 2 0 0 0 2-2V9"/></svg>${imgs(p).length}</span>` : ""}</div>
         <div class="card-body">
           <h3 class="card-title">${L(p, "name")}</h3>
           <p class="card-desc">${L(p, "desc")}</p>
@@ -266,9 +289,9 @@
     const wrap = $("#pdMedia");
     if (!list.length) { wrap.innerHTML = `<div class="pd-main">${placeholder()}</div>`; return; }
     wrap.innerHTML = `
-      <div class="pd-main"><img id="pdMainImg" src="${list[0]}" alt="${L(p, "name")}"></div>
+      <div class="pd-main"><img id="pdMainImg" src="${list[0]}" alt="${esc(L(p, "name"))}" width="800" height="600" decoding="async" loading="eager" fetchpriority="high"></div>
       ${list.length > 1 ? `<div class="pd-thumbs">${list.map((src, i) =>
-        `<button type="button" class="pd-thumb ${i === 0 ? "active" : ""}" data-i="${i}"><img src="${src}" alt=""></button>`).join("")}</div>` : ""}`;
+        `<button type="button" class="pd-thumb ${i === 0 ? "active" : ""}" data-i="${i}"><img src="${thumbOf(src)}" alt="" width="60" height="60" decoding="async" loading="lazy"></button>`).join("")}</div>` : ""}`;
     if (list.length > 1) {
       const main = $("#pdMainImg");
       $$(".pd-thumb", wrap).forEach(btn => btn.addEventListener("click", () => {
@@ -355,7 +378,7 @@
     body.innerHTML = state.cart.map((l, i) => {
       const optTxt = l.opts.map(o => `${L(o, "label")}`).join(" · ");
       return `<div class="line">
-        <div class="line-media">${media(l.image)}</div>
+        <div class="line-media">${imgTag(thumbOf(l.image), L(l, "name"), { w: 120, h: 120 })}</div>
         <div>
           <p class="line-title">${L(l, "name")}</p>
           <p class="line-opts">${optTxt}</p>
@@ -594,9 +617,16 @@
     // config-driven
     $$("[data-cfg]").forEach(el => { el.textContent = L(state.config, el.dataset.cfg); });
     const lt = $("#langToggle"); if (lt) lt.textContent = t("lang_switch");
-    document.title = `${state.config.brand || "Bahrain3D"} — ${L(state.config, "tagline")}`;
-    if (state.page === "product") { if (state.currentProductId) mountProduct(state.currentProductId); }
-    else renderProducts();
+    const brand = state.config.brand || "Bahrain3D";
+    if (state.page === "product") {
+      // keep the title product-specific (don't clobber the pre-rendered SEO title with the generic one)
+      const p = state.products.find(x => x.id === state.currentProductId);
+      document.title = p ? `${L(p, "name")} — ${brand}` : `${brand} — ${L(state.config, "tagline")}`;
+      if (state.currentProductId) mountProduct(state.currentProductId);
+    } else {
+      document.title = `${brand} — ${L(state.config, "tagline")}`;
+      renderProducts();
+    }
     const drawer = $("#drawer");
     if (drawer && drawer.classList.contains("open")) renderCart();
   }
@@ -623,7 +653,10 @@
     if (booted) return;
     booted = true;
     try {
-      const res = await fetch("data/products.json", { cache: "no-store" });
+      // Normal HTTP caching + a version query string (injected per page by sitegen as
+      // window.__DATA_VERSION__) so a new catalog busts the cache, old ones stay cached.
+      const ver = (typeof window !== "undefined" && window.__DATA_VERSION__) ? window.__DATA_VERSION__ : "";
+      const res = await fetch("/data/products.json" + (ver ? "?v=" + encodeURIComponent(ver) : ""));
       const data = await res.json();
       state.config = data.config || {};
       state.library = data.library || { colors: [], materials: [] };
@@ -641,7 +674,8 @@
     // which page are we on?
     state.page = $("#productDetail") ? "product" : "index";
     if (state.page === "product") {
-      state.currentProductId = new URLSearchParams(location.search).get("id");
+      // static /p/<slug>/ pages inject the id; legacy product.html uses ?id=
+      state.currentProductId = (typeof window !== "undefined" && window.__PRODUCT_ID__) || new URLSearchParams(location.search).get("id");
     }
 
     // brand
