@@ -119,13 +119,16 @@
   const isPath = (s) => typeof s === "string" && !!s && !s.startsWith("data:");
   // derive the thumbnail path for a full-image path; data: URIs (legacy) pass through unchanged
   const thumbOf = (s) => isPath(s) ? s.replace(/\.(webp|jpe?g|png)$/i, "-thumb.webp") : s;
+  // root-relative URL for a stored image path, so it resolves the same on / and on /p/<slug>/
+  // pages (a bare "images/…" path would break under /p/<slug>/). data: URIs pass through.
+  const srcOf = (s) => isPath(s) ? ("/" + s.replace(/^\/+/, "")) : s;
   // render an <img> with lazy/eager loading + optional dimensions; placeholder when empty
   function imgTag(src, alt, opts) {
     opts = opts || {};
     if (!src) return placeholder();
     const load = opts.eager ? `loading="eager" fetchpriority="high"` : `loading="lazy"`;
     const dim = (opts.w && opts.h) ? ` width="${opts.w}" height="${opts.h}"` : "";
-    return `<img src="${src}" alt="${esc(alt || "")}" decoding="async" ${load}${dim}>`;
+    return `<img src="${srcOf(src)}" alt="${esc(alt || "")}" decoding="async" ${load}${dim}>`;
   }
   const media = (img) => imgTag(img, "");
   // Link to a product's static page (/p/<slug>/) via the shared sitegen module when present;
@@ -289,13 +292,13 @@
     const wrap = $("#pdMedia");
     if (!list.length) { wrap.innerHTML = `<div class="pd-main">${placeholder()}</div>`; return; }
     wrap.innerHTML = `
-      <div class="pd-main"><img id="pdMainImg" src="${list[0]}" alt="${esc(L(p, "name"))}" width="800" height="600" decoding="async" loading="eager" fetchpriority="high"></div>
+      <div class="pd-main"><img id="pdMainImg" src="${srcOf(list[0])}" alt="${esc(L(p, "name"))}" width="800" height="600" decoding="async" loading="eager" fetchpriority="high"></div>
       ${list.length > 1 ? `<div class="pd-thumbs">${list.map((src, i) =>
-        `<button type="button" class="pd-thumb ${i === 0 ? "active" : ""}" data-i="${i}"><img src="${thumbOf(src)}" alt="" width="60" height="60" decoding="async" loading="lazy"></button>`).join("")}</div>` : ""}`;
+        `<button type="button" class="pd-thumb ${i === 0 ? "active" : ""}" data-i="${i}"><img src="${srcOf(thumbOf(src))}" alt="" width="60" height="60" decoding="async" loading="lazy"></button>`).join("")}</div>` : ""}`;
     if (list.length > 1) {
       const main = $("#pdMainImg");
       $$(".pd-thumb", wrap).forEach(btn => btn.addEventListener("click", () => {
-        main.src = list[+btn.dataset.i];
+        main.src = srcOf(list[+btn.dataset.i]);
         $$(".pd-thumb", wrap).forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
       }));

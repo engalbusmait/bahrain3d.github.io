@@ -219,8 +219,9 @@
     const currency = cfg.currency || "BHD";
     const imgs = imgsOf(p);
     const first = imgs[0];
+    const thumbSrc = isPath(first) ? "/" + thumbOf(first).replace(/^\/+/, "") : thumbOf(first);
     const media = first
-      ? `<img src="${escAttr(thumbOf(first))}" alt="${escAttr(p.name_en || "")}" decoding="async" loading="lazy" width="400" height="300">`
+      ? `<img src="${escAttr(thumbSrc)}" alt="${escAttr(p.name_en || "")}" decoding="async" loading="lazy" width="400" height="300">`
       : PLACEHOLDER;
     const count = imgs.length > 1
       ? `<span class="media-count"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 21h12a2 2 0 0 0 2-2V9"/></svg>${imgs.length}</span>`
