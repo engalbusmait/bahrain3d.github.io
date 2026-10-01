@@ -216,18 +216,22 @@
           ${counter}
         </div>`;
       }
+      // Options still ADD to the base price; we just display each choice's FINAL price
+      // (base + that option) instead of a "+delta", in any group that has priced options.
+      const base = Number(p.price) || 0;
+      const priced = (g.values || []).some(x => Number(x.priceDelta));
       const values = (g.values || []).map((v, vi) => {
         const delta = Number(v.priceDelta) || 0;
-        const deltaTxt = delta ? `<span class="delta">+${money(delta)}</span>` : "";
+        const finalTxt = priced ? `<span class="delta">${money(base + delta)} ${currency()}</span>` : "";
         if (isColor) {
           return `<button type="button" class="swatch" data-g="${gi}" data-v="${vi}" style="background:${v.swatch || "#ccc"}">
-            <span class="tip">${L(v, "label")}${delta ? " +" + money(delta) : ""}</span></button>`;
+            <span class="tip">${L(v, "label")}${priced ? " — " + money(base + delta) + " " + currency() : ""}</span></button>`;
         }
         if (isColorMat) {
           return `<button type="button" class="chip chip-swatch" data-g="${gi}" data-v="${vi}">
-            <span class="dot" style="background:${v.swatch || "#ccc"}"></span>${L(v, "label")}</button>`;
+            <span class="dot" style="background:${v.swatch || "#ccc"}"></span>${L(v, "label")}${finalTxt}</button>`;
         }
-        return `<button type="button" class="chip" data-g="${gi}" data-v="${vi}">${L(v, "label")}${deltaTxt}</button>`;
+        return `<button type="button" class="chip" data-g="${gi}" data-v="${vi}">${L(v, "label")}${finalTxt}</button>`;
       }).join("");
       return `<div class="opt-group">
         <div class="opt-label"><span>${L(g, "name")}</span><span class="req">*</span></div>
