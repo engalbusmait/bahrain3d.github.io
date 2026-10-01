@@ -937,6 +937,16 @@
               "priceDelta": 15
             }
           ]
+        },
+        {
+          "name_en": "the names on the keychains",
+          "name_ar": "الاسماء في الميداليات",
+          "type": "text",
+          "required": true,
+          "maxLen": 200,
+          "priceDelta": 0,
+          "placeholder_en": "Write the names and comma between them",
+          "placeholder_ar": "اكتب الاسماء وضع فاصلة بينهم"
         }
       ]
     },
@@ -1404,5 +1414,5 @@
       "options": []
     }
   ],
-  "version": "6db15325"
+  "version": "03ba8568"
 }
