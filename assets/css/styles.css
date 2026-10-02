@@ -4,6 +4,7 @@
 :root {
   --accent: #d81f2a;
   --accent-2: #ef4444;
+  --calm: #0d9488;
   --accent-grad: linear-gradient(135deg, #e11d29 0%, #a30f18 100%);
   --bg: #ffffff;
   --bg-soft: #f6f7fb;
@@ -128,9 +129,20 @@ img.logo { padding: 0; }
 .hero .container { position: relative; z-index: 1; padding-block: 64px 72px; text-align: center; }
 .hero .eyebrow {
   display: inline-block; padding: 6px 14px; border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--accent); font-weight: 800; font-size: 13px; margin-bottom: 18px;
+  background: color-mix(in srgb, var(--calm) 14%, transparent);
+  color: var(--calm); font-weight: 800; font-size: 13px; margin-bottom: 18px;
 }
+
+/* ---------- Category filter ---------- */
+.cat-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+.cat-bar:empty { display: none; }
+.cat-chip {
+  border: 1.5px solid var(--border); background: var(--bg-card); color: var(--text);
+  border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 700;
+  font-family: inherit; cursor: pointer; transition: border-color .15s, color .15s, background .15s;
+}
+.cat-chip:hover { border-color: var(--calm); }
+.cat-chip.active { border-color: var(--calm); color: #fff; background: var(--calm); }
 .hero h1 { font-size: clamp(30px, 5vw, 52px); line-height: 1.1; margin: 0 0 14px; letter-spacing: -1px; }
 .hero p { font-size: clamp(16px, 2.4vw, 20px); color: var(--text-soft); max-width: 620px; margin: 0 auto 26px; }
 

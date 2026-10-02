@@ -15,6 +15,8 @@
     discount: null,   // applied discount {code, percent}
     deliveryOptions: [],  // configured delivery/pickup methods {label_en, label_ar, price}
     delivery: null,       // chosen delivery method for the open checkout
+    categories: [],       // catalog categories {id, label_en, label_ar}
+    activeCat: "",        // homepage filter: "" = All, else a category id
     products: [],
     cart: loadCart(),
     current: null,        // product open in modal
@@ -140,12 +142,38 @@
     return `product.html?id=${encodeURIComponent(p.id)}`;
   }
 
+  // a product's category ids (array; tolerant of legacy/missing)
+  const prodCats = (p) => Array.isArray(p.categories) ? p.categories : [];
+
+  /* ---------- category filter bar ---------- */
+  function renderCatBar() {
+    const bar = $("#catBar");
+    if (!bar) return;
+    const cats = state.categories || [];
+    if (!cats.length) { bar.innerHTML = ""; return; }   // no categories -> no bar
+    const chip = (id, label) => `<button type="button" class="cat-chip ${state.activeCat === id ? "active" : ""}" data-cat="${esc(id)}">${esc(label)}</button>`;
+    bar.innerHTML = chip("", t("all")) + cats.map(c => chip(c.id, L(c, "label"))).join("");
+    $$(".cat-chip", bar).forEach(b => b.addEventListener("click", () => {
+      state.activeCat = b.dataset.cat || "";
+      // keep the URL shareable: ?cat=<id> (or clean for All)
+      const u = new URL(location.href);
+      if (state.activeCat) u.searchParams.set("cat", state.activeCat); else u.searchParams.delete("cat");
+      history.replaceState(null, "", u);
+      renderCatBar();
+      renderProducts();
+    }));
+  }
+
   /* ---------- render products ---------- */
   function renderProducts() {
     const grid = $("#grid");
     if (!grid) return;
-    if (!state.products.length) { grid.innerHTML = `<p class="muted">—</p>`; return; }
-    grid.innerHTML = state.products.map((p, i) => {
+    renderCatBar();
+    const list = state.activeCat
+      ? state.products.filter(p => prodCats(p).includes(state.activeCat))
+      : state.products;
+    if (!list.length) { grid.innerHTML = `<p class="muted" style="padding:20px 0">—</p>`; return; }
+    grid.innerHTML = list.map((p, i) => {
       const colorGroup = getOptions(p).find(g => g.type === "color" || g.type === "colormat");
       const swatches = colorGroup ? colorGroup.values.slice(0, 5).map(v =>
         `<span class="dot" style="background:${v.swatch || "#ccc"}" title="${L(v, "label")}"></span>`).join("") : "";
@@ -691,12 +719,14 @@
       state.library = data.library || { colors: [], materials: [] };
       state.discounts = data.discounts || [];
       state.deliveryOptions = data.delivery || [];
+      state.categories = data.categories || [];
       state.products = data.products || [];
     } catch (e) {
       state.config = { brand: "Bahrain3D", whatsapp: "97334499469", currency: "BHD" };
       state.library = { colors: [], materials: [] };
       state.discounts = [];
       state.deliveryOptions = [];
+      state.categories = [];
       state.products = [];
     }
 
@@ -705,6 +735,10 @@
     if (state.page === "product") {
       // static /p/<slug>/ pages inject the id; legacy product.html uses ?id=
       state.currentProductId = (typeof window !== "undefined" && window.__PRODUCT_ID__) || new URLSearchParams(location.search).get("id");
+    } else {
+      // homepage category filter from ?cat= (keeps the view linkable/shareable)
+      const qcat = new URLSearchParams(location.search).get("cat") || "";
+      state.activeCat = state.categories.some(c => c.id === qcat) ? qcat : "";
     }
 
     // brand

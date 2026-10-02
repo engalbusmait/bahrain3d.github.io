@@ -54,7 +54,8 @@ window.I18N = {
     free: "Free",
     share: "Share this product",
     link_copied: "Link copied to clipboard",
-    copy_link: "Copy this link:"
+    copy_link: "Copy this link:",
+    all: "All"
   },
   ar: {
     dir: "rtl",
@@ -110,6 +111,7 @@ window.I18N = {
     free: "مجاني",
     share: "مشاركة هذا المنتج",
     link_copied: "تم نسخ الرابط",
-    copy_link: "انسخ هذا الرابط:"
+    copy_link: "انسخ هذا الرابط:",
+    all: "الكل"
   }
 };

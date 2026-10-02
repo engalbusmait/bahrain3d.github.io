@@ -251,6 +251,12 @@
     const desc = clampDesc(cfg.tagline_en || "Custom 3D-printed products made in Bahrain. Choose your size and color and order on WhatsApp.");
     const gsv = (cfg.google_site_verification || "").trim();
     const cards = (data.products || []).map(p => productCard(p, data)).join("\n      ");
+    // Pre-rendered category filter bar (store.js re-renders it localized + interactive).
+    const cats = data.categories || [];
+    const catBar = cats.length
+      ? `<button type="button" class="cat-chip active" data-cat="">All</button>` +
+        cats.map(c => `<button type="button" class="cat-chip" data-cat="${escAttr(c.id)}">${esc(c.label_en || "")}</button>`).join("")
+      : "";
     const og = ogBlock({ type: "website", title, desc, url: BASE + "/", image: BASE + "/assets/img/og-default.jpg" });
     const head = `  <title>${esc(title)}</title>
   <meta name="description" content="${escAttr(desc)}">
@@ -285,6 +291,7 @@ ${jsonLd(jsonLdWebsite(data))}
           <p data-i18n="all_products_sub">Pick a design, choose your options, and order on WhatsApp.</p>
         </div>
       </div>
+      <div class="cat-bar" id="catBar">${catBar}</div>
       <div class="grid" id="grid">
       ${cards}
       </div>
