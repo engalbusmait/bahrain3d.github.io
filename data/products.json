@@ -327,6 +327,9 @@
             "c_8m18bu"
           ]
         }
+      ],
+      "categories": [
+        "cat_6xewn5"
       ]
     },
     {
@@ -397,6 +400,10 @@
           "placeholder_en": "Write the name here",
           "placeholder_ar": "اكتب اسم الطفل هنا"
         }
+      ],
+      "categories": [
+        "cat_jaa5cv",
+        "cat_h5qcj8"
       ]
     },
     {
@@ -489,6 +496,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "cat_ujwgzo"
       ]
     },
     {
@@ -566,6 +576,9 @@
           "placeholder_en": "Write the participant's number here.",
           "placeholder_ar": "اكتب رقم المتسابق هنا"
         }
+      ],
+      "categories": [
+        "cat_jaa5cv"
       ]
     },
     {
@@ -644,6 +657,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "cat_h5qcj8"
       ]
     },
     {
@@ -702,7 +718,10 @@
           ]
         }
       ],
-      "options": []
+      "options": [],
+      "categories": [
+        "cat_ujwgzo"
+      ]
     },
     {
       "id": "p_wye21b",
@@ -817,6 +836,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "cat_jaa5cv"
       ]
     },
     {
@@ -937,17 +959,11 @@
               "priceDelta": 15
             }
           ]
-        },
-        {
-          "name_en": "the names on the keychains",
-          "name_ar": "الاسماء في الميداليات",
-          "type": "text",
-          "required": true,
-          "maxLen": 200,
-          "priceDelta": 0,
-          "placeholder_en": "Write the names and comma between them",
-          "placeholder_ar": "اكتب الاسماء وضع فاصلة بينهم"
         }
+      ],
+      "categories": [
+        "cat_6xewn5",
+        "cat_jaa5cv"
       ]
     },
     {
@@ -1050,6 +1066,10 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "cat_6xewn5",
+        "cat_jaa5cv"
       ]
     },
     {
@@ -1089,6 +1109,10 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "cat_6xewn5",
+        "cat_jaa5cv"
       ]
     },
     {
@@ -1156,6 +1180,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "cat_ujwgzo"
       ]
     },
     {
@@ -1216,7 +1243,10 @@
           ]
         }
       ],
-      "options": []
+      "options": [],
+      "categories": [
+        "cat_ujwgzo"
+      ]
     },
     {
       "id": "p_yt2wq6",
@@ -1249,6 +1279,9 @@
             }
           ]
         }
+      ],
+      "categories": [
+        "cat_jaa5cv"
       ]
     },
     {
@@ -1398,6 +1431,9 @@
           "placeholder_en": "Write the letters along with the shapes.",
           "placeholder_ar": "اكتب الاحرف مع الاشكال"
         }
+      ],
+      "categories": [
+        "cat_h5qcj8"
       ]
     },
     {
@@ -1411,187 +1447,33 @@
         "images/products/p_x4jfs7/0.webp"
       ],
       "colorParts": [],
-      "options": []
-    },
-    {
-      "id": "p_yi08ss",
-      "name_en": "Paper holder for Teacher's Day",
-      "name_ar": "حاملة الورق ليوم المعلم",
-      "desc_en": "Make your Teacher's Day gifts stand out with messages written specifically for teachers, with the option to customize the text at the top .. Choose to print the text using the same material as the model (PLA or PETG).",
-      "desc_ar": "ميز هداياك ليوم المعلم بعبارات كتبت خصيصاً للمعلمين مع امكانية تغيير الكتابة بالاعلى .. اختار الكتابة بنفس نوع المجسم (PLA or PETG)",
-      "price": 1.297,
-      "images": [
-        "images/products/p_yi08ss/0.webp"
-      ],
-      "colorParts": [
-        {
-          "name_en": "Base color",
-          "name_ar": "لون القاعدة ",
-          "colors": [
-            "c_z01xqd",
-            "c_jmhsvm",
-            "c_mmwvrm",
-            "c_b4kgic",
-            "c_f4ibme",
-            "c_gsfbar",
-            "c_3voplg",
-            "c_schbhl",
-            "c_qiylk1",
-            "c_8m18bu",
-            "c_8uja73",
-            "c_q2o6sz",
-            "c_21mye0",
-            "c_601ilr",
-            "c_idoqt1",
-            "c_c0ldb2",
-            "c_k194oe",
-            "c_c5okbl",
-            "c_cbeu54",
-            "c_r3fglz",
-            "c_26l9vt",
-            "c_9tfb9c",
-            "c_g6e53c",
-            "c_r85j9g",
-            "c_oujcgs"
-          ]
-        },
-        {
-          "name_en": "Text color",
-          "name_ar": "لون الكتابة",
-          "colors": [
-            "c_z01xqd",
-            "c_schbhl",
-            "c_3voplg",
-            "c_jmhsvm",
-            "c_mmwvrm",
-            "c_gsfbar",
-            "c_f4ibme",
-            "c_b4kgic",
-            "c_qiylk1",
-            "c_8m18bu",
-            "c_8uja73",
-            "c_q2o6sz",
-            "c_21mye0",
-            "c_601ilr",
-            "c_idoqt1",
-            "c_c0ldb2",
-            "c_k194oe",
-            "c_r85j9g",
-            "c_c5okbl",
-            "c_cbeu54",
-            "c_r3fglz",
-            "c_26l9vt",
-            "c_9tfb9c",
-            "c_oujcgs",
-            "c_g6e53c"
-          ]
-        }
-      ],
-      "options": [
-        {
-          "name_en": "The phrase written on the model",
-          "name_ar": "الجملة المكتوبة على المجسم",
-          "type": "text",
-          "required": true,
-          "maxLen": 100,
-          "priceDelta": 0,
-          "placeholder_en": "Type the sentence you want to print.",
-          "placeholder_ar": "اكتب الجملة المراد طباعتها"
-        }
+      "options": [],
+      "categories": [
+        "cat_h5qcj8"
       ]
-    },
-    {
-      "id": "p_nx5dkl",
-      "name_en": "Brush or pen holder",
-      "name_ar": "حاملة الفرش او الاقلام",
-      "desc_en": "A brush or pen holder featuring three compartments to facilitate the organization and arrangement of items, available in a color that suits your space",
-      "desc_ar": "حاملة الفرش او الاقلام التي تتميز بتقسيماتها الثلاث لتسيهل توزيع الاشياء وترتيبها والتي يمكنك اختيار اللون الذي يناسب المكان",
-      "price": 3,
-      "images": [
-        "images/products/p_nx5dkl/0.webp",
-        "images/products/p_nx5dkl/1.webp"
-      ],
-      "colorParts": [
-        {
-          "name_en": "Holder Color",
-          "name_ar": "لون الحاملة",
-          "colors": [
-            "c_26l9vt",
-            "c_9tfb9c",
-            "c_cbeu54",
-            "c_k194oe",
-            "c_8m18bu",
-            "c_8uja73",
-            "c_q2o6sz",
-            "c_21mye0",
-            "c_601ilr",
-            "c_idoqt1",
-            "c_c0ldb2",
-            "c_r3fglz",
-            "c_c5okbl",
-            "c_r85j9g",
-            "c_g6e53c",
-            "c_oujcgs",
-            "c_schbhl",
-            "c_z01xqd",
-            "c_jmhsvm",
-            "c_mmwvrm",
-            "c_b4kgic",
-            "c_3voplg",
-            "c_qiylk1",
-            "c_gsfbar",
-            "c_f4ibme"
-          ]
-        }
-      ],
-      "options": []
-    },
-    {
-      "id": "p_knmn6k",
-      "name_en": "Pen or brush holder for Teacher's Day",
-      "name_ar": "حاملة الاقلام او الفرش ليوم المعلم",
-      "desc_en": "A wonderful gift for those who appreciate uniqueness; it can be used to hold flowers or pens, or paired with other distinctive gifts.",
-      "desc_ar": "هدية رائعة لمحبي التميز حيث يمكنكم استخدامها لوضع ورود او اقلام او مع هدايا اخرى مميزة",
-      "price": 1.3,
-      "images": [
-        "images/products/p_knmn6k/0.webp",
-        "images/products/p_knmn6k/1.webp"
-      ],
-      "colorParts": [
-        {
-          "name_en": "Cup Color",
-          "name_ar": "لون الكوب",
-          "colors": [
-            "c_26l9vt",
-            "c_9tfb9c",
-            "c_cbeu54",
-            "c_k194oe",
-            "c_8m18bu",
-            "c_8uja73",
-            "c_q2o6sz",
-            "c_21mye0",
-            "c_601ilr",
-            "c_c0ldb2",
-            "c_idoqt1",
-            "c_r3fglz",
-            "c_c5okbl",
-            "c_r85j9g",
-            "c_g6e53c",
-            "c_oujcgs",
-            "c_schbhl",
-            "c_z01xqd",
-            "c_jmhsvm",
-            "c_3voplg",
-            "c_mmwvrm",
-            "c_b4kgic",
-            "c_f4ibme",
-            "c_gsfbar",
-            "c_qiylk1"
-          ]
-        }
-      ],
-      "options": []
     }
   ],
-  "version": "312827a4"
+  "version": "94d90c1a",
+  "categories": [
+    {
+      "id": "cat_6xewn5",
+      "label_en": "Keychains",
+      "label_ar": "ميداليات"
+    },
+    {
+      "id": "cat_ujwgzo",
+      "label_en": "Coffee & Kitchen",
+      "label_ar": "القهوة والمطبخ"
+    },
+    {
+      "id": "cat_jaa5cv",
+      "label_en": "Education & Kids",
+      "label_ar": "التعليم والأطفال"
+    },
+    {
+      "id": "cat_h5qcj8",
+      "label_en": "Accessories",
+      "label_ar": "إكسسوارات"
+    }
+  ]
 }
