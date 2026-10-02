@@ -238,7 +238,33 @@
       "price": 1.5
     }
   ],
-  "categories": [],
+  "categories": [
+    {
+      "id": "cat_whqm63",
+      "label_en": "Decorative hanging ornaments",
+      "label_ar": "تعليقات للزينة"
+    },
+    {
+      "id": "cat_2emqb2",
+      "label_en": "Keychain",
+      "label_ar": "ميداليات"
+    },
+    {
+      "id": "cat_wc3ebc",
+      "label_en": "Teachers Day",
+      "label_ar": "يوم المعلم"
+    },
+    {
+      "id": "cat_7a6l8l",
+      "label_en": "For Kids",
+      "label_ar": "للاطفال"
+    },
+    {
+      "id": "cat_xa3bbp",
+      "label_en": "Coffee",
+      "label_ar": "القهوة"
+    }
+  ],
   "products": [
     {
       "id": "p_nameplate",
@@ -329,7 +355,10 @@
           ]
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_2emqb2",
+        "cat_7a6l8l"
+      ]
     },
     {
       "id": "p_p7i5st",
@@ -400,7 +429,10 @@
           "placeholder_ar": "اكتب اسم الطفل هنا"
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_2emqb2",
+        "cat_7a6l8l"
+      ]
     },
     {
       "id": "p_766d03",
@@ -493,7 +525,9 @@
           ]
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_xa3bbp"
+      ]
     },
     {
       "id": "p_y401vp",
@@ -571,7 +605,9 @@
           "placeholder_ar": "اكتب رقم المتسابق هنا"
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_2emqb2"
+      ]
     },
     {
       "id": "p_iu4hbo",
@@ -650,7 +686,9 @@
           ]
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_7a6l8l"
+      ]
     },
     {
       "id": "p_xcdzo3",
@@ -957,7 +995,10 @@
           "placeholder_ar": "اكتب الاسماء وضع فاصلة بينهم"
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_2emqb2",
+        "cat_wc3ebc"
+      ]
     },
     {
       "id": "p_3h8c3c",
@@ -1060,7 +1101,10 @@
           ]
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_wc3ebc",
+        "cat_2emqb2"
+      ]
     },
     {
       "id": "p_vi1jr4",
@@ -1100,7 +1144,10 @@
           ]
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_2emqb2",
+        "cat_wc3ebc"
+      ]
     },
     {
       "id": "p_xkbrdi",
@@ -1168,7 +1215,9 @@
           ]
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_xa3bbp"
+      ]
     },
     {
       "id": "p_n3c6f5",
@@ -1229,7 +1278,9 @@
         }
       ],
       "options": [],
-      "categories": []
+      "categories": [
+        "cat_xa3bbp"
+      ]
     },
     {
       "id": "p_yt2wq6",
@@ -1263,7 +1314,9 @@
           ]
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_7a6l8l"
+      ]
     },
     {
       "id": "p_a6w9jp",
@@ -1413,7 +1466,9 @@
           "placeholder_ar": "اكتب الاحرف مع الاشكال"
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_7a6l8l"
+      ]
     },
     {
       "id": "p_x4jfs7",
@@ -1515,7 +1570,9 @@
           "placeholder_ar": "اكتب الجملة المراد طباعتها"
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_wc3ebc"
+      ]
     },
     {
       "id": "p_nx5dkl",
@@ -1781,8 +1838,10 @@
           ]
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_whqm63"
+      ]
     }
   ],
-  "version": "d36fc8bc"
+  "version": "cc423c38"
 }
