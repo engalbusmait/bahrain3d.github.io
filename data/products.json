@@ -238,6 +238,7 @@
       "price": 1.5
     }
   ],
+  "categories": [],
   "products": [
     {
       "id": "p_nameplate",
@@ -328,9 +329,7 @@
           ]
         }
       ],
-      "categories": [
-        "cat_6xewn5"
-      ]
+      "categories": []
     },
     {
       "id": "p_p7i5st",
@@ -401,10 +400,7 @@
           "placeholder_ar": "اكتب اسم الطفل هنا"
         }
       ],
-      "categories": [
-        "cat_jaa5cv",
-        "cat_h5qcj8"
-      ]
+      "categories": []
     },
     {
       "id": "p_766d03",
@@ -497,9 +493,7 @@
           ]
         }
       ],
-      "categories": [
-        "cat_ujwgzo"
-      ]
+      "categories": []
     },
     {
       "id": "p_y401vp",
@@ -577,9 +571,7 @@
           "placeholder_ar": "اكتب رقم المتسابق هنا"
         }
       ],
-      "categories": [
-        "cat_jaa5cv"
-      ]
+      "categories": []
     },
     {
       "id": "p_iu4hbo",
@@ -658,9 +650,7 @@
           ]
         }
       ],
-      "categories": [
-        "cat_h5qcj8"
-      ]
+      "categories": []
     },
     {
       "id": "p_xcdzo3",
@@ -719,9 +709,7 @@
         }
       ],
       "options": [],
-      "categories": [
-        "cat_ujwgzo"
-      ]
+      "categories": []
     },
     {
       "id": "p_wye21b",
@@ -837,9 +825,7 @@
           ]
         }
       ],
-      "categories": [
-        "cat_jaa5cv"
-      ]
+      "categories": []
     },
     {
       "id": "p_tu0zyp",
@@ -959,12 +945,19 @@
               "priceDelta": 15
             }
           ]
+        },
+        {
+          "name_en": "the names on the keychains",
+          "name_ar": "الاسماء في الميداليات",
+          "type": "text",
+          "required": true,
+          "maxLen": 200,
+          "priceDelta": 0,
+          "placeholder_en": "Write the names and comma between them",
+          "placeholder_ar": "اكتب الاسماء وضع فاصلة بينهم"
         }
       ],
-      "categories": [
-        "cat_6xewn5",
-        "cat_jaa5cv"
-      ]
+      "categories": []
     },
     {
       "id": "p_3h8c3c",
@@ -1067,10 +1060,7 @@
           ]
         }
       ],
-      "categories": [
-        "cat_6xewn5",
-        "cat_jaa5cv"
-      ]
+      "categories": []
     },
     {
       "id": "p_vi1jr4",
@@ -1110,10 +1100,7 @@
           ]
         }
       ],
-      "categories": [
-        "cat_6xewn5",
-        "cat_jaa5cv"
-      ]
+      "categories": []
     },
     {
       "id": "p_xkbrdi",
@@ -1181,9 +1168,7 @@
           ]
         }
       ],
-      "categories": [
-        "cat_ujwgzo"
-      ]
+      "categories": []
     },
     {
       "id": "p_n3c6f5",
@@ -1244,9 +1229,7 @@
         }
       ],
       "options": [],
-      "categories": [
-        "cat_ujwgzo"
-      ]
+      "categories": []
     },
     {
       "id": "p_yt2wq6",
@@ -1280,9 +1263,7 @@
           ]
         }
       ],
-      "categories": [
-        "cat_jaa5cv"
-      ]
+      "categories": []
     },
     {
       "id": "p_a6w9jp",
@@ -1432,9 +1413,7 @@
           "placeholder_ar": "اكتب الاحرف مع الاشكال"
         }
       ],
-      "categories": [
-        "cat_h5qcj8"
-      ]
+      "categories": []
     },
     {
       "id": "p_x4jfs7",
@@ -1448,32 +1427,362 @@
       ],
       "colorParts": [],
       "options": [],
-      "categories": [
-        "cat_h5qcj8"
-      ]
+      "categories": []
+    },
+    {
+      "id": "p_yi08ss",
+      "name_en": "Paper holder for Teacher's Day",
+      "name_ar": "حاملة الورق ليوم المعلم",
+      "desc_en": "Make your Teacher's Day gifts stand out with messages written specifically for teachers, with the option to customize the text at the top .. Choose to print the text using the same material as the model (PLA or PETG).",
+      "desc_ar": "ميز هداياك ليوم المعلم بعبارات كتبت خصيصاً للمعلمين مع امكانية تغيير الكتابة بالاعلى .. اختار الكتابة بنفس نوع المجسم (PLA or PETG)",
+      "price": 1.297,
+      "images": [
+        "images/products/p_yi08ss/0.webp"
+      ],
+      "colorParts": [
+        {
+          "name_en": "Base color",
+          "name_ar": "لون القاعدة ",
+          "colors": [
+            "c_z01xqd",
+            "c_jmhsvm",
+            "c_mmwvrm",
+            "c_b4kgic",
+            "c_f4ibme",
+            "c_gsfbar",
+            "c_3voplg",
+            "c_schbhl",
+            "c_qiylk1",
+            "c_8m18bu",
+            "c_8uja73",
+            "c_q2o6sz",
+            "c_21mye0",
+            "c_601ilr",
+            "c_idoqt1",
+            "c_c0ldb2",
+            "c_k194oe",
+            "c_c5okbl",
+            "c_cbeu54",
+            "c_r3fglz",
+            "c_26l9vt",
+            "c_9tfb9c",
+            "c_g6e53c",
+            "c_r85j9g",
+            "c_oujcgs"
+          ]
+        },
+        {
+          "name_en": "Text color",
+          "name_ar": "لون الكتابة",
+          "colors": [
+            "c_z01xqd",
+            "c_schbhl",
+            "c_3voplg",
+            "c_jmhsvm",
+            "c_mmwvrm",
+            "c_gsfbar",
+            "c_f4ibme",
+            "c_b4kgic",
+            "c_qiylk1",
+            "c_8m18bu",
+            "c_8uja73",
+            "c_q2o6sz",
+            "c_21mye0",
+            "c_601ilr",
+            "c_idoqt1",
+            "c_c0ldb2",
+            "c_k194oe",
+            "c_r85j9g",
+            "c_c5okbl",
+            "c_cbeu54",
+            "c_r3fglz",
+            "c_26l9vt",
+            "c_9tfb9c",
+            "c_oujcgs",
+            "c_g6e53c"
+          ]
+        }
+      ],
+      "options": [
+        {
+          "name_en": "The phrase written on the model",
+          "name_ar": "الجملة المكتوبة على المجسم",
+          "type": "text",
+          "required": true,
+          "maxLen": 100,
+          "priceDelta": 0,
+          "placeholder_en": "Type the sentence you want to print.",
+          "placeholder_ar": "اكتب الجملة المراد طباعتها"
+        }
+      ],
+      "categories": []
+    },
+    {
+      "id": "p_nx5dkl",
+      "name_en": "Brush or pen holder",
+      "name_ar": "حاملة الفرش او الاقلام",
+      "desc_en": "A brush or pen holder featuring three compartments to facilitate the organization and arrangement of items, available in a color that suits your space",
+      "desc_ar": "حاملة الفرش او الاقلام التي تتميز بتقسيماتها الثلاث لتسيهل توزيع الاشياء وترتيبها والتي يمكنك اختيار اللون الذي يناسب المكان",
+      "price": 3,
+      "images": [
+        "images/products/p_nx5dkl/0.webp",
+        "images/products/p_nx5dkl/1.webp"
+      ],
+      "colorParts": [
+        {
+          "name_en": "Holder Color",
+          "name_ar": "لون الحاملة",
+          "colors": [
+            "c_26l9vt",
+            "c_9tfb9c",
+            "c_cbeu54",
+            "c_k194oe",
+            "c_8m18bu",
+            "c_8uja73",
+            "c_q2o6sz",
+            "c_21mye0",
+            "c_601ilr",
+            "c_idoqt1",
+            "c_c0ldb2",
+            "c_r3fglz",
+            "c_c5okbl",
+            "c_r85j9g",
+            "c_g6e53c",
+            "c_oujcgs",
+            "c_schbhl",
+            "c_z01xqd",
+            "c_jmhsvm",
+            "c_mmwvrm",
+            "c_b4kgic",
+            "c_3voplg",
+            "c_qiylk1",
+            "c_gsfbar",
+            "c_f4ibme"
+          ]
+        }
+      ],
+      "options": [],
+      "categories": []
+    },
+    {
+      "id": "p_l7dcu8",
+      "name_en": "Car Decorative Hangings",
+      "name_ar": "تعليقات السيارات",
+      "desc_en": "Personalize your car or turn it into a gift that expresses your feelings, choosing from a variety of shapes and phrases. Please select the material from the same type (PLA or PETG).",
+      "desc_ar": "ميز سيارتك او اجعلها هدية تعبر عن مشاعرك بأشكال وعبارات متنوعة يمكنك الاختيار منها .. اختر المادة من نفس النوع (PLA or PETG)",
+      "price": 1.2,
+      "images": [
+        "images/products/p_l7dcu8/0.webp",
+        "images/products/p_l7dcu8/1.webp",
+        "images/products/p_l7dcu8/2.webp",
+        "images/products/p_l7dcu8/3.webp",
+        "images/products/p_l7dcu8/4.webp",
+        "images/products/p_l7dcu8/5.webp",
+        "images/products/p_l7dcu8/6.webp",
+        "images/products/p_l7dcu8/7.webp"
+      ],
+      "colorParts": [
+        {
+          "name_en": "Base Color",
+          "name_ar": "لون القاعدة",
+          "colors": [
+            "c_z01xqd",
+            "c_jmhsvm",
+            "c_mmwvrm",
+            "c_b4kgic",
+            "c_gsfbar",
+            "c_3voplg",
+            "c_schbhl",
+            "c_qiylk1",
+            "c_8m18bu",
+            "c_cbeu54",
+            "c_k194oe",
+            "c_oujcgs",
+            "c_c5okbl",
+            "c_9tfb9c",
+            "c_c0ldb2",
+            "c_8uja73",
+            "c_q2o6sz",
+            "c_idoqt1",
+            "c_r3fglz",
+            "c_26l9vt",
+            "c_g6e53c",
+            "c_r85j9g",
+            "c_21mye0",
+            "c_601ilr",
+            "c_f4ibme"
+          ]
+        },
+        {
+          "name_en": "",
+          "name_ar": "g",
+          "colors": [
+            "c_9tfb9c",
+            "c_cbeu54",
+            "c_k194oe",
+            "c_8m18bu",
+            "c_schbhl",
+            "c_z01xqd",
+            "c_jmhsvm",
+            "c_3voplg",
+            "c_gsfbar",
+            "c_mmwvrm",
+            "c_b4kgic",
+            "c_f4ibme",
+            "c_qiylk1",
+            "c_8uja73",
+            "c_c0ldb2",
+            "c_idoqt1",
+            "c_q2o6sz",
+            "c_21mye0",
+            "c_r85j9g",
+            "c_601ilr",
+            "c_r3fglz",
+            "c_26l9vt",
+            "c_oujcgs",
+            "c_c5okbl",
+            "c_g6e53c"
+          ]
+        }
+      ],
+      "options": [
+        {
+          "name_en": "model number",
+          "name_ar": "رقم الشكل والنقوش",
+          "type": "select",
+          "values": [
+            {
+              "label_en": "1",
+              "label_ar": "1",
+              "value": "1",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "2",
+              "label_ar": "2",
+              "value": "2",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "3",
+              "label_ar": "3",
+              "value": "3",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "4",
+              "label_ar": "4",
+              "value": "4",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "5",
+              "label_ar": "5",
+              "value": "5",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "6",
+              "label_ar": "6",
+              "value": "6",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "7",
+              "label_ar": "7",
+              "value": "7",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "8",
+              "label_ar": "8",
+              "value": "8",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "9",
+              "label_ar": "9",
+              "value": "9",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "10",
+              "label_ar": "10",
+              "value": "10",
+              "priceDelta": 0
+            }
+          ]
+        },
+        {
+          "name_en": "The required phrase",
+          "name_ar": "العبارة المطلوبة",
+          "type": "select",
+          "values": [
+            {
+              "label_en": "1",
+              "label_ar": "1",
+              "value": "1",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "2",
+              "label_ar": "2",
+              "value": "2",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "3",
+              "label_ar": "3",
+              "value": "3",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "4",
+              "label_ar": "4",
+              "value": "4",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "5",
+              "label_ar": "5",
+              "value": "5",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "6",
+              "label_ar": "6",
+              "value": "6",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "7",
+              "label_ar": "7",
+              "value": "7",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "8",
+              "label_ar": "8",
+              "value": "8",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "9",
+              "label_ar": "9",
+              "value": "9",
+              "priceDelta": 0
+            },
+            {
+              "label_en": "10",
+              "label_ar": "10",
+              "value": "10",
+              "priceDelta": 0
+            }
+          ]
+        }
+      ],
+      "categories": []
     }
   ],
-  "version": "94d90c1a",
-  "categories": [
-    {
-      "id": "cat_6xewn5",
-      "label_en": "Keychains",
-      "label_ar": "ميداليات"
-    },
-    {
-      "id": "cat_ujwgzo",
-      "label_en": "Coffee & Kitchen",
-      "label_ar": "القهوة والمطبخ"
-    },
-    {
-      "id": "cat_jaa5cv",
-      "label_en": "Education & Kids",
-      "label_ar": "التعليم والأطفال"
-    },
-    {
-      "id": "cat_h5qcj8",
-      "label_en": "Accessories",
-      "label_ar": "إكسسوارات"
-    }
-  ]
+  "version": "d36fc8bc"
 }
