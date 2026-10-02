@@ -263,6 +263,21 @@
       "id": "cat_xa3bbp",
       "label_en": "Coffee",
       "label_ar": "القهوة"
+    },
+    {
+      "id": "cat_qwdo6y",
+      "label_en": "For Girls",
+      "label_ar": "للفتيات"
+    },
+    {
+      "id": "cat_4gssea",
+      "label_en": "Educational",
+      "label_ar": "تعليمي"
+    },
+    {
+      "id": "cat_ybmdam",
+      "label_en": "Decorative",
+      "label_ar": "الزينة"
     }
   ],
   "products": [
@@ -747,7 +762,9 @@
         }
       ],
       "options": [],
-      "categories": []
+      "categories": [
+        "cat_qwdo6y"
+      ]
     },
     {
       "id": "p_wye21b",
@@ -863,7 +880,9 @@
           ]
         }
       ],
-      "categories": []
+      "categories": [
+        "cat_ybmdam"
+      ]
     },
     {
       "id": "p_tu0zyp",
@@ -1315,7 +1334,8 @@
         }
       ],
       "categories": [
-        "cat_7a6l8l"
+        "cat_7a6l8l",
+        "cat_4gssea"
       ]
     },
     {
@@ -1482,7 +1502,9 @@
       ],
       "colorParts": [],
       "options": [],
-      "categories": []
+      "categories": [
+        "cat_ybmdam"
+      ]
     },
     {
       "id": "p_yi08ss",
@@ -1619,7 +1641,9 @@
         }
       ],
       "options": [],
-      "categories": []
+      "categories": [
+        "cat_qwdo6y"
+      ]
     },
     {
       "id": "p_l7dcu8",
@@ -1843,5 +1867,5 @@
       ]
     }
   ],
-  "version": "cc423c38"
+  "version": "2495d4fa"
 }
